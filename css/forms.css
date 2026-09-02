@@ -1,0 +1,242 @@
+/* ==========================================================================
+   Studdy — pantallas de login y onboarding
+   ========================================================================== */
+
+body.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--paper-2);
+  background-image:
+    radial-gradient(circle at 12% 8%, var(--green-50) 0%, transparent 42%),
+    radial-gradient(circle at 88% 92%, var(--green-50) 0%, transparent 40%);
+}
+
+.screen__header {
+  padding: 26px 0;
+}
+
+.screen__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 72px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 520px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  box-shadow: var(--shadow-pop);
+  padding: 44px 42px 40px;
+}
+
+.panel--wide { max-width: 620px; }
+
+.panel__title {
+  font-size: 29px;
+  margin-bottom: 12px;
+}
+
+.panel__lead {
+  color: var(--ink-2);
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+
+.panel__error { margin-bottom: 20px; }
+.panel__error:empty { display: none; }
+
+/* --------------------------------------------------------------------------
+   Login
+   -------------------------------------------------------------------------- */
+
+.login-panel { text-align: center; }
+
+.login-panel__mark {
+  width: 62px; height: 62px;
+  margin: 0 auto 26px;
+  border-radius: 19px;
+  background: linear-gradient(150deg, var(--green-500), var(--green-700));
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: 0 10px 26px -10px rgba(13, 122, 79, .85);
+}
+.login-panel__mark svg { width: 32px; height: 32px; }
+
+.login-panel .panel__lead { margin-bottom: 34px; }
+
+/* --------------------------------------------------------------------------
+   Onboarding
+   -------------------------------------------------------------------------- */
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+
+.progress__bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  width: 25%;
+  border-radius: 999px;
+  background: var(--green-600);
+  transition: width .32s cubic-bezier(.4, 0, .2, 1);
+}
+
+.progress__label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.step-panel { display: none; }
+.step-panel.is-active { display: block; animation: step-in .28s ease both; }
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.step-panel__question {
+  font-size: 27px;
+  margin-bottom: 10px;
+}
+
+.step-panel__hint {
+  color: var(--ink-3);
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+.field-stack { display: grid; gap: 22px; }
+
+/* Opciones de nivel (radio como tarjeta) */
+.options { display: grid; gap: 12px; }
+.options--2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.option { position: relative; display: block; cursor: pointer; }
+
+.option input {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+}
+
+.option__box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 19px;
+  border: 1.5px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--paper);
+  transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+
+.option:hover .option__box { border-color: var(--green-300); }
+
+.option input:focus-visible + .option__box {
+  box-shadow: 0 0 0 4px var(--green-100);
+}
+
+.option input:checked + .option__box {
+  border-color: var(--green-600);
+  background: var(--green-50);
+  box-shadow: inset 0 0 0 1px var(--green-600);
+}
+
+.option__dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  flex: none;
+  display: grid;
+  place-items: center;
+  transition: border-color .16s ease;
+}
+
+.option__dot::after {
+  content: "";
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--green-600);
+  transform: scale(0);
+  transition: transform .16s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.option input:checked + .option__box .option__dot { border-color: var(--green-600); }
+.option input:checked + .option__box .option__dot::after { transform: scale(1); }
+
+.option__text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.option__sub {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+/* Asignaturas */
+.subject-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.subject-list:empty { display: none; }
+
+.subject-empty {
+  padding: 26px 20px;
+  border: 1.5px dashed var(--line-2);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14.5px;
+  margin-bottom: 18px;
+}
+
+.subject-adder { display: none; gap: 10px; margin-bottom: 18px; }
+.subject-adder.is-open { display: flex; }
+.subject-adder .input { flex: 1; }
+
+/* Navegación entre pasos */
+.step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 34px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.step-nav__spacer { flex: 1; }
+
+@media (max-width: 560px) {
+  .panel { padding: 32px 24px 30px; border-radius: 20px; }
+  .options--2col { grid-template-columns: 1fr; }
+  .step-panel__question { font-size: 23px; }
+}

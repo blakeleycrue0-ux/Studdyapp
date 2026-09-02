@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studdy — Estudia con una IA que sabe en qué curso estás</title>
+<meta name="description" content="Sube tus apuntes y obtén esquemas, flashcards, exámenes y presentaciones escritos para tu nivel exacto, de 1º de la ESO a la universidad.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/landing.css">
+</head>
+<body class="landing">
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="index.html">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 9 12 4 2 9l10 5 10-5Z"/>
+          <path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/>
+        </svg>
+      </span>
+      Studdy
+    </a>
+    <a class="btn btn--primary btn--sm" href="login.html">Entrar</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero">
+    <div class="wrap hero__grid">
+
+      <div class="hero__copy">
+        <p class="hero__eyebrow">
+          <b>Niveles</b> ESO · Bachillerato · FP · Universidad
+        </p>
+
+        <h1 class="hero__title">
+          Estudiar se hace <em>fácil</em> cuando la IA sabe en qué curso estás.
+        </h1>
+
+        <p class="hero__lead">
+          Sube tus apuntes y Studdy te devuelve esquemas, flashcards, exámenes y
+          presentaciones escritos para tu nivel exacto. Ni por encima, ni por
+          debajo: un esquema de 1º de la ESO no se parece en nada a uno de 2º de
+          Bachillerato, y aquí tampoco.
+        </p>
+
+        <div class="hero__actions">
+          <a class="btn btn--primary btn--lg" href="login.html">
+            Entrar
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </a>
+          <a class="btn btn--ghost btn--lg" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+
+        <p class="hero__note" style="margin-top:18px">Funciona en el navegador, sin instalar nada.</p>
+      </div>
+
+      <!-- Objeto 3D con rotación 360° continua -->
+      <div class="scene" aria-hidden="true">
+        <div class="book-shadow"></div>
+        <div class="book-tilt">
+          <div class="book">
+            <div class="book__face book__face--front">
+              <span class="book__emblem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 9 12 4 2 9l10 5 10-5Z"/>
+                  <path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/>
+                  <path d="M22 9v5"/>
+                </svg>
+                <span>Studdy</span>
+              </span>
+            </div>
+            <div class="book__face book__face--back">
+              <span class="book__emblem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 9 12 4 2 9l10 5 10-5Z"/>
+                  <path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/>
+                </svg>
+              </span>
+            </div>
+            <div class="book__face book__face--spine"></div>
+            <div class="book__face book__face--edge"></div>
+            <div class="book__face book__face--top"></div>
+            <div class="book__face book__face--bottom"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== FUNCIONALIDADES ==================== -->
+  <section class="section section--tint" id="funciones">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="section__kicker">Qué puedes hacer</p>
+        <h2 class="section__title">Cinco formas de trabajar el mismo apunte</h2>
+        <p class="section__lead">
+          Subes el tema una vez. A partir de ahí, eliges cómo quieres estudiarlo.
+        </p>
+      </div>
+
+      <div class="features">
+
+        <article class="feature">
+          <div class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8.5" y="2.5" width="12" height="5" rx="1.5"/>
+              <rect x="8.5" y="16.5" width="12" height="5" rx="1.5"/>
+              <rect x="8.5" y="9.5" width="12" height="5" rx="1.5"/>
+              <path d="M3.5 5h2.5v14H3.5M6 12h2.5"/>
+            </svg>
+          </div>
+          <h3 class="feature__title">Esquemas</h3>
+          <p class="feature__text">
+            La IA lee tus apuntes y los reorganiza en un esquema jerárquico, con
+            los términos clave destacados y un bloque de ideas para el repaso rápido.
+          </p>
+        </article>
+
+        <article class="feature">
+          <div class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="6.5" width="14" height="15" rx="2.5"/>
+              <path d="M6.5 3.5h11a3 3 0 0 1 3 3v11"/>
+              <path d="M6.5 12.5h6M6.5 16.5h3.5"/>
+            </svg>
+          </div>
+          <h3 class="feature__title">Flashcards</h3>
+          <p class="feature__text">
+            Preguntas y respuestas generadas desde tu propio tema. Una tarjeta cada
+            vez, le das la vuelta y compruebas si te lo sabías.
+          </p>
+        </article>
+
+        <article class="feature">
+          <div class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 3.5h-2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-14a2 2 0 0 0-2-2h-2"/>
+              <rect x="8.5" y="1.8" width="7" height="4" rx="1.4"/>
+              <path d="M8.6 13.2l2 2 4.3-4.4"/>
+            </svg>
+          </div>
+          <h3 class="feature__title">Exámenes</h3>
+          <p class="feature__text">
+            Preguntas tipo test y de desarrollo corto con la dificultad de tu curso.
+            Respondes, corriges y ves en qué has fallado.
+          </p>
+        </article>
+
+        <article class="feature">
+          <div class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.5 12.5a7.5 7.5 0 0 1-10.9 6.7L4 20.5l1.4-5.4A7.5 7.5 0 1 1 20.5 12.5Z"/>
+              <path d="m13.6 8.2.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z"/>
+            </svg>
+          </div>
+          <h3 class="feature__title">Chat IA</h3>
+          <p class="feature__text">
+            Un tutor que ya sabe tu curso y tus asignaturas, así que no tienes que
+            explicarle el contexto cada vez que preguntas una duda.
+          </p>
+        </article>
+
+        <article class="feature">
+          <div class="feature__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="3.5" width="19" height="12.5" rx="2"/>
+              <path d="M12 16v5M8.5 21h7"/>
+              <path d="M6.5 12.2 9.8 8.6l2.4 2.3 3.1-3.6"/>
+            </svg>
+          </div>
+          <h3 class="feature__title">Presentaciones</h3>
+          <p class="feature__text">
+            Diapositivas con título y puntos clave, generadas desde un apunte o
+            desde un tema que escribas tú. Las pasas en pantalla como un carrusel.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CÓMO FUNCIONA ==================== -->
+  <section class="section" id="como-funciona">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="section__kicker">Cómo empiezas</p>
+        <h2 class="section__title">Cuatro pasos y ya estás estudiando</h2>
+        <p class="section__lead">
+          El onboarding solo te pregunta lo que hace falta para acertar con tu nivel.
+        </p>
+      </div>
+
+      <ol class="steps">
+
+        <li class="step">
+          <div class="step__num">1</div>
+          <h3 class="step__title">Dinos tu nombre</h3>
+          <p class="step__text">
+            Empezamos por lo básico, para que la app te hable a ti y no a un usuario genérico.
+          </p>
+        </li>
+
+        <li class="step">
+          <div class="step__num">2</div>
+          <h3 class="step__title">Elige qué estudias</h3>
+          <p class="step__text">
+            ESO, Bachillerato, FP o Universidad. Es lo que marca el tono de todo lo
+            que la IA genere después.
+          </p>
+        </li>
+
+        <li class="step">
+          <div class="step__num">3</div>
+          <h3 class="step__title">Concreta tu curso</h3>
+          <p class="step__text">
+            Curso y rama, grado y familia profesional, o carrera. Cada nivel te
+            pregunta solo lo suyo.
+          </p>
+        </li>
+
+        <li class="step">
+          <div class="step__num">4</div>
+          <h3 class="step__title">Añade tus asignaturas</h3>
+          <p class="step__text">
+            Las que estés dando este curso. Cada apunte que subas irá dentro de una
+            de ellas.
+          </p>
+        </li>
+
+      </ol>
+    </div>
+  </section>
+
+  <!-- ==================== CIERRE ==================== -->
+  <section class="section--tint">
+    <div class="wrap closer">
+      <h2 class="closer__title">Tu primer esquema, en un par de minutos</h2>
+      <p class="closer__lead">
+        Cuéntanos en qué curso estás, sube un tema y mira cómo queda cuando está
+        escrito para ti.
+      </p>
+      <a class="btn btn--primary btn--lg" href="login.html">
+        Entrar
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <span class="brand" style="font-size:16px">
+      <span class="brand__mark" aria-hidden="true" style="width:24px;height:24px;border-radius:7px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px">
+          <path d="M22 9 12 4 2 9l10 5 10-5Z"/>
+          <path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/>
+        </svg>
+      </span>
+      Studdy
+    </span>
+    <span>Herramienta de estudio con IA para estudiantes de España.</span>
+  </div>
+</footer>
+
+</body>
+</html>
