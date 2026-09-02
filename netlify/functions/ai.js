@@ -466,8 +466,30 @@ async function handleChat(apiKey, profile, payload) {
     throw new Error('No hay ningún mensaje que responder.');
   }
 
+  // Cuando se pregunta desde dentro de un apunte, se le pasa su contenido para
+  // que responda sobre ese material y no en abstracto.
+  const noteContent = payload.noteContent
+    ? String(payload.noteContent).trim().slice(0, MAX_CHARS)
+    : '';
+  const noteSubject = payload.noteSubject ? String(payload.noteSubject).trim() : '';
+
+  const contexto = noteContent
+    ? [
+        '',
+        'El estudiante está consultando este apunte' +
+          (noteSubject ? ` de ${noteSubject}` : '') + ':',
+        '---',
+        noteContent,
+        '---',
+        'Responde apoyándote en ese apunte. Si te pregunta algo que no aparece ' +
+        'en él, dilo y contesta con tu propio conocimiento, dejando claro que ' +
+        'esa parte no está en sus apuntes.',
+      ].join('\n')
+    : '';
+
   const system = [
     levelGuidance(profile),
+    contexto,
     '',
     'Eres el tutor de estudio de este estudiante dentro de la app Studdy.',
     'Explica con claridad, paso a paso, y comprueba que se entiende antes de avanzar.',

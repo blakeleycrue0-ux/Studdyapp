@@ -1,138 +1,177 @@
 /* ==========================================================================
-   Chat IA.
+   Chat.
+   Dos modos: general (pestaña de abajo) y sobre un apunte concreto (pestaña
+   del cuaderno). En el segundo se le pasa el contenido del apunte para que
+   responda sobre ese material.
 
-   El contexto de sistema (nivel, curso y asignaturas) lo añade la función
-   serverless leyendo el perfil del propio usuario, así que aquí solo se
-   envían los mensajes. El historial vive en memoria durante la visita: esta
-   versión no lo guarda en Supabase.
+   El nivel, curso y asignaturas los añade la función serverless leyendo el
+   perfil del propio usuario. El historial vive en memoria durante la visita.
    ========================================================================== */
 
 Studdy.views.chat = (function () {
   'use strict';
 
-  var historial = [];
+  // clave -> [{role, content}]. 'global' para el chat general, el id del
+  // apunte para cada cuaderno.
+  var historiales = {};
+
+  function historial(clave) {
+    if (!historiales[clave]) historiales[clave] = [];
+    return historiales[clave];
+  }
+
+  // ------------------------------------------------------------------------
 
   function render(vista) {
     var perfil = Studdy.app.state.profile;
 
     vista.innerHTML =
-      '<div class="page-head"><div>' +
-        '<h1 class="page-head__title">Chat</h1>' +
-        '<p class="page-head__sub">Ya sabe que estás en ' +
-          Studdy.escapeHtml(Studdy.app.describeLevel(perfil)) +
-          ', no hace falta que se lo expliques.</p>' +
-      '</div></div>' +
+      Studdy.app.cabecera('Chat',
+        'Ya sabe que estás en ' + Studdy.app.describeLevel(perfil) + '.') +
+      armazon('');
 
-      '<div class="chat">' +
+    montar(vista, 'global', null, [
+      'Explícame un concepto que no entiendo',
+      'Hazme un resumen de un tema',
+      '¿Cómo me organizo para un examen?',
+    ]);
+  }
+
+  function renderPanel(panel, apunte) {
+    panel.innerHTML = armazon(' chat--embedded');
+
+    montar(panel, apunte.id, apunte, [
+      'Explícamelo más fácil',
+      'Ponme un ejemplo',
+      '¿Qué es lo más importante de esto?',
+    ]);
+  }
+
+  // ------------------------------------------------------------------------
+
+  function armazon(clase) {
+    return (
+      '<div class="chat' + clase + '">' +
         '<div class="chat__log" id="log"></div>' +
         '<div class="chat__composer">' +
-          '<textarea class="chat__input" id="input" rows="1" ' +
-            'aria-label="Escribe tu mensaje"></textarea>' +
+          '<textarea class="chat__input" id="input" rows="1" aria-label="Escribe tu mensaje"></textarea>' +
           '<button class="chat__send" id="send" disabled aria-label="Enviar">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
             'stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>' +
           '</button>' +
         '</div>' +
-      '</div>';
+      '</div>'
+    );
+  }
 
-    var log = Studdy.$('#log', vista);
-    var input = Studdy.$('#input', vista);
-    var enviar = Studdy.$('#send', vista);
+  function montar(raiz, clave, apunte, sugerencias) {
+    var log = Studdy.$('#log', raiz);
+    var input = Studdy.$('#input', raiz);
+    var enviar = Studdy.$('#send', raiz);
 
-    pintarHistorial(log);
+    pintar();
 
     input.addEventListener('input', function () {
       enviar.disabled = !input.value.trim();
       input.style.height = 'auto';
-      input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+      input.style.height = Math.min(input.scrollHeight, 130) + 'px';
     });
 
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        if (input.value.trim()) mandar();
+        if (input.value.trim()) mandar(input.value.trim());
       }
     });
 
     enviar.addEventListener('click', function () {
-      if (input.value.trim()) mandar();
+      if (input.value.trim()) mandar(input.value.trim());
     });
 
-    function mandar() {
-      var texto = input.value.trim();
+    log.addEventListener('click', function (e) {
+      var sug = e.target.closest('.chat__suggestion');
+      if (sug) mandar(sug.textContent);
+    });
 
-      historial.push({ role: 'user', content: texto });
+    function pintar() {
+      var mensajes = historial(clave);
+
+      if (!mensajes.length) {
+        log.innerHTML =
+          '<div class="chat__intro">' +
+            '<div class="chat__intro-icon">' + Studdy.icons.chat + '</div>' +
+            '<p>' + (apunte
+              ? 'Pregúntame lo que quieras sobre este apunte.'
+              : 'Pregúntame lo que no entiendas. Respondo al nivel de tu curso.') + '</p>' +
+            '<div class="chat__suggestions">' +
+              sugerencias.map(function (t) {
+                return '<button class="chat__suggestion" type="button">' +
+                  Studdy.escapeHtml(t) + '</button>';
+              }).join('') +
+            '</div>' +
+          '</div>';
+        return;
+      }
+
+      log.innerHTML = '';
+      mensajes.forEach(function (m) {
+        burbuja(log, m.role === 'user' ? 'user' : 'ai', m.content);
+      });
+      abajo(log);
+    }
+
+    function mandar(texto) {
+      historial(clave).push({ role: 'user', content: texto });
+
       input.value = '';
       input.style.height = 'auto';
-      enviar.disabled = true;
       input.disabled = true;
+      enviar.disabled = true;
 
-      pintarHistorial(log);
-      var pensando = anadirBurbuja(log, 'ai', '');
+      pintar();
+      var pensando = burbuja(log, 'ai', '');
       pensando.innerHTML = '<span class="spinner" style="vertical-align:-3px"></span>';
       abajo(log);
 
-      Studdy.ai('chat', { messages: historial })
+      var carga = { messages: historial(clave) };
+      if (apunte) {
+        carga.noteContent = apunte.content;
+        carga.noteSubject = Studdy.app.subjectName(apunte.subject_id);
+      }
+
+      Studdy.ai('chat', carga)
         .then(function (respuesta) {
-          historial.push({ role: 'assistant', content: respuesta.reply });
-          pintarHistorial(log);
+          historial(clave).push({ role: 'assistant', content: respuesta.reply });
+          pintar();
         })
         .catch(function (err) {
-          // El turno que ha fallado no se queda en el historial: si no, se
+          // El turno que ha fallado no se queda guardado: si no, se
           // reenviaría en cada intento posterior.
-          historial.pop();
-          pintarHistorial(log);
-          anadirBurbuja(log, 'error', err.message);
+          historial(clave).pop();
+          pintar();
+          burbuja(log, 'error', err.message);
           input.value = texto;
         })
         .then(function () {
           input.disabled = false;
           enviar.disabled = !input.value.trim();
-          input.focus();
           abajo(log);
         });
     }
-
-    input.focus();
   }
 
-  function pintarHistorial(log) {
-    if (!historial.length) {
-      log.innerHTML =
-        '<div class="chat__intro">' +
-          '<div class="chat__intro-icon">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
-            'stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M20.5 12.5a7.5 7.5 0 0 1-10.9 6.7L4 20.5l1.4-5.4A7.5 7.5 0 1 1 20.5 12.5Z"/>' +
-            '<path d="m13.6 8.2.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8.8-1.9Z"/></svg>' +
-          '</div>' +
-          '<p>Pregúntale lo que no entiendas de cualquier asignatura. Responde ' +
-            'al nivel de tu curso.</p>' +
-        '</div>';
-      return;
-    }
-
-    log.innerHTML = '';
-    historial.forEach(function (mensaje) {
-      anadirBurbuja(log, mensaje.role === 'user' ? 'user' : 'ai', mensaje.content);
-    });
-    abajo(log);
-  }
-
-  function anadirBurbuja(log, tipo, texto) {
+  function burbuja(log, tipo, texto) {
     var intro = Studdy.$('.chat__intro', log);
     if (intro) intro.remove();
 
-    var burbuja = document.createElement('div');
-    burbuja.className = 'msg msg--' + tipo;
-    burbuja.textContent = texto;
-    log.appendChild(burbuja);
-    return burbuja;
+    var el = document.createElement('div');
+    el.className = 'msg msg--' + tipo;
+    el.textContent = texto;
+    log.appendChild(el);
+    return el;
   }
 
-  function abajo(log) {
-    log.scrollTop = log.scrollHeight;
-  }
+  function abajo(log) { log.scrollTop = log.scrollHeight; }
 
-  return { render: render };
+  return { render: render, renderPanel: renderPanel };
 })();

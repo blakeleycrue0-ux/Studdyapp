@@ -1,6 +1,6 @@
 /* ==========================================================================
    Studdy — armazón de la aplicación
-   Estado compartido, carga de datos, enrutador por hash y cabecera.
+   Estado compartido, carga de datos y enrutador por hash.
    ========================================================================== */
 
 Studdy.views = {};
@@ -8,10 +8,16 @@ Studdy.views = {};
 Studdy.app = (function () {
   'use strict';
 
+  var CLAVE_ULTIMO = 'studdy:ultimo-apunte';
+
   var estado = {
     profile: null,
     subjects: [],
     notes: [],
+    // noteId -> { summary, flashcards, exams, presentations }
+    counts: {},
+    // null si la tabla exam_attempts todavía no existe en Supabase
+    attempts: null,
   };
 
   var vista = Studdy.$('#view');
@@ -23,13 +29,12 @@ Studdy.app = (function () {
   function start() {
     Studdy.requireSession()
       .then(function (session) {
-        if (!session) return null;
+        if (!session) return false;
         return cargarDatos();
       })
       .then(function (ok) {
         if (!ok) return;
         Studdy.$('#boot').remove();
-        pintarCabecera();
         window.addEventListener('hashchange', enrutar);
         enrutar();
       })
@@ -38,33 +43,26 @@ Studdy.app = (function () {
         if (boot) boot.remove();
         vista.innerHTML = Studdy.errorHtml(err.message);
       });
-
-    Studdy.$('#logout').addEventListener('click', function () {
-      Studdy.signOut().then(function () {
-        window.location.replace('index.html');
-      });
-    });
   }
 
   function cargarDatos() {
     return Studdy.getProfile().then(function (perfil) {
-      // Sin perfil no hay app: el onboarding es obligatorio.
       if (!perfil) {
         window.location.replace('onboarding.html');
         return false;
       }
       estado.profile = perfil;
-      return Promise.all([cargarAsignaturas(), cargarApuntes()]).then(function () {
-        return true;
-      });
+      return Promise.all([
+        cargarAsignaturas(),
+        cargarApuntes().then(cargarContadores),
+        cargarIntentos(),
+      ]).then(function () { return true; });
     });
   }
 
   function cargarAsignaturas() {
     return Studdy.getClient()
-      .then(function (client) {
-        return client.from('subjects').select('*').order('name');
-      })
+      .then(function (c) { return c.from('subjects').select('*').order('name'); })
       .then(function (out) {
         if (out.error) throw new Error(traducir(out.error));
         estado.subjects = out.data || [];
@@ -73,9 +71,8 @@ Studdy.app = (function () {
 
   function cargarApuntes() {
     return Studdy.getClient()
-      .then(function (client) {
-        return client
-          .from('notes')
+      .then(function (c) {
+        return c.from('notes')
           .select('id, subject_id, content, created_at')
           .order('created_at', { ascending: false });
       })
@@ -83,6 +80,49 @@ Studdy.app = (function () {
         if (out.error) throw new Error(traducir(out.error));
         estado.notes = out.data || [];
       });
+  }
+
+  // Cuántas cosas ha generado ya cada apunte. Alimenta las insignias de las
+  // pestañas del cuaderno y las etiquetas de la lista de apuntes.
+  function cargarContadores() {
+    return Studdy.getClient().then(function (c) {
+      return Promise.all([
+        c.from('summaries').select('note_id'),
+        c.from('flashcards').select('note_id'),
+        c.from('exams').select('note_id'),
+        c.from('presentations').select('note_id'),
+      ]).then(function (res) {
+        var counts = {};
+        estado.notes.forEach(function (n) {
+          counts[n.id] = { summary: 0, flashcards: 0, exams: 0, presentations: 0 };
+        });
+
+        var claves = ['summary', 'flashcards', 'exams', 'presentations'];
+        res.forEach(function (r, i) {
+          if (r.error) return;
+          (r.data || []).forEach(function (fila) {
+            if (fila.note_id && counts[fila.note_id]) counts[fila.note_id][claves[i]]++;
+          });
+        });
+
+        estado.counts = counts;
+      });
+    });
+  }
+
+  // La tabla de intentos es opcional: si todavía no se ha ejecutado su
+  // migración, la app funciona igual y solo se oculta el dato de aciertos.
+  function cargarIntentos() {
+    return Studdy.getClient()
+      .then(function (c) {
+        return c.from('exam_attempts')
+          .select('score, total, created_at')
+          .order('created_at', { ascending: false });
+      })
+      .then(function (out) {
+        estado.attempts = out.error ? null : (out.data || []);
+      })
+      .catch(function () { estado.attempts = null; });
   }
 
   function traducir(error) {
@@ -94,72 +134,43 @@ Studdy.app = (function () {
   }
 
   // ------------------------------------------------------------------------
-  // Cabecera
-  // ------------------------------------------------------------------------
-
-  function describirNivel(perfil) {
-    if (!perfil) return '';
-
-    switch (perfil.level) {
-      case 'ESO':
-        return (perfil.course ? perfil.course + ' de la ESO' : 'ESO');
-      case 'Bachillerato':
-        return [
-          perfil.course ? perfil.course + ' de Bachillerato' : 'Bachillerato',
-          perfil.branch,
-        ].filter(Boolean).join(' · ');
-      case 'FP':
-        return [
-          perfil.fp_grade ? 'FP de Grado ' + perfil.fp_grade : 'FP',
-          perfil.fp_cycle,
-          perfil.fp_family,
-        ].filter(Boolean).join(' · ');
-      case 'Universidad':
-        return [
-          perfil.university_degree,
-          perfil.course ? perfil.course + ' curso' : null,
-        ].filter(Boolean).join(' · ');
-      default:
-        return perfil.level || '';
-    }
-  }
-
-  function pintarCabecera() {
-    Studdy.$('#user-name').textContent = estado.profile.name;
-    Studdy.$('#user-level').textContent = describirNivel(estado.profile);
-  }
-
-  // ------------------------------------------------------------------------
   // Enrutador
   // ------------------------------------------------------------------------
 
   var RUTAS = {
-    apuntes: function (params) { return Studdy.views.notes.render(vista, params); },
-    flashcards: function (params) { return Studdy.views.flashcards.render(vista, params); },
-    examenes: function (params) { return Studdy.views.exams.render(vista, params); },
-    chat: function (params) { return Studdy.views.chat.render(vista, params); },
-    presentaciones: function (params) { return Studdy.views.presentations.render(vista, params); },
+    inicio: function (p) { return Studdy.views.home.render(vista, p); },
+    apuntes: function (p) { return Studdy.views.notes.render(vista, p); },
+    n: function (p) { return Studdy.views.notebook.render(vista, p); },
+    chat: function (p) { return Studdy.views.chat.render(vista, p); },
+    p: function (p) { return Studdy.views.presentations.render(vista, p); },
+    perfil: function (p) { return Studdy.views.profile.render(vista, p); },
+  };
+
+  // Qué pestaña de abajo se ilumina en cada sección.
+  var TAB_DE_SECCION = {
+    inicio: 'inicio', apuntes: 'apuntes', n: 'apuntes',
+    p: 'apuntes', chat: 'chat', perfil: 'perfil',
   };
 
   function enrutar() {
     var partes = (window.location.hash || '').replace(/^#\/?/, '').split('/').filter(Boolean);
-    var seccion = partes[0] || 'apuntes';
-    var param = partes[1] || null;
+    var seccion = partes[0] || 'inicio';
 
     if (!RUTAS[seccion]) {
-      window.location.hash = '#/apuntes';
+      window.location.hash = '#/inicio';
       return;
     }
 
-    Studdy.$$('.nav-link').forEach(function (link) {
-      link.classList.toggle('is-active', link.dataset.section === seccion);
+    var activa = TAB_DE_SECCION[seccion];
+    Studdy.$$('.tab').forEach(function (tab) {
+      tab.classList.toggle('is-active', tab.dataset.section === activa);
     });
 
     vista.innerHTML = Studdy.loadingHtml('Cargando…');
     window.scrollTo(0, 0);
 
     Promise.resolve()
-      .then(function () { return RUTAS[seccion]({ id: param }); })
+      .then(function () { return RUTAS[seccion](partes.slice(1)); })
       .catch(function (err) {
         vista.innerHTML = Studdy.errorHtml(err.message);
       });
@@ -171,26 +182,126 @@ Studdy.app = (function () {
   }
 
   // ------------------------------------------------------------------------
-  // Acceso al estado desde las vistas
+  // Consultas sobre el estado
   // ------------------------------------------------------------------------
-
-  function subjectName(id) {
-    var s = estado.subjects.filter(function (x) { return x.id === id; })[0];
-    return s ? s.name : 'Sin asignatura';
-  }
 
   function findNote(id) {
     return estado.notes.filter(function (n) { return n.id === id; })[0] || null;
+  }
+
+  function findSubject(id) {
+    return estado.subjects.filter(function (s) { return s.id === id; })[0] || null;
+  }
+
+  function subjectName(id) {
+    var s = findSubject(id);
+    return s ? s.name : 'Sin asignatura';
+  }
+
+  // Color estable por asignatura: mismo id, mismo color siempre.
+  function subjectColor(id) {
+    var suma = 0;
+    var texto = String(id || '');
+    for (var i = 0; i < texto.length; i++) suma = (suma * 31 + texto.charCodeAt(i)) >>> 0;
+    return 'sc-' + (suma % 8);
+  }
+
+  function notesOfSubject(subjectId) {
+    return estado.notes.filter(function (n) { return n.subject_id === subjectId; });
+  }
+
+  function countsFor(noteId) {
+    return estado.counts[noteId] || { summary: 0, flashcards: 0, exams: 0, presentations: 0 };
+  }
+
+  function bumpCount(noteId, clave, cantidad) {
+    if (!estado.counts[noteId]) {
+      estado.counts[noteId] = { summary: 0, flashcards: 0, exams: 0, presentations: 0 };
+    }
+    estado.counts[noteId][clave] += (cantidad == null ? 1 : cantidad);
+  }
+
+  // ------------------------------------------------------------------------
+  // Último apunte abierto — alimenta el "Continuar" del inicio
+  // ------------------------------------------------------------------------
+
+  function recordarApunte(noteId) {
+    try { localStorage.setItem(CLAVE_ULTIMO, noteId); } catch (e) { /* modo privado */ }
+  }
+
+  function ultimoApunte() {
+    var id;
+    try { id = localStorage.getItem(CLAVE_ULTIMO); } catch (e) { return null; }
+    return id ? findNote(id) : null;
+  }
+
+  // ------------------------------------------------------------------------
+  // Nivel académico en texto
+  // ------------------------------------------------------------------------
+
+  function describirNivel(perfil) {
+    if (!perfil) return '';
+    switch (perfil.level) {
+      case 'ESO':
+        return perfil.course ? perfil.course + ' de la ESO' : 'ESO';
+      case 'Bachillerato':
+        return [perfil.course ? perfil.course + ' de Bachillerato' : 'Bachillerato', perfil.branch]
+          .filter(Boolean).join(' · ');
+      case 'FP':
+        return [perfil.fp_grade ? 'FP de Grado ' + perfil.fp_grade : 'FP', perfil.fp_cycle, perfil.fp_family]
+          .filter(Boolean).join(' · ');
+      case 'Universidad':
+        return [perfil.university_degree, perfil.course ? perfil.course + ' curso' : null]
+          .filter(Boolean).join(' · ');
+      default:
+        return perfil.level || '';
+    }
+  }
+
+  function iniciales(nombre) {
+    return String(nombre || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(function (p) { return p.charAt(0).toUpperCase(); })
+      .join('') || '?';
+  }
+
+  // ------------------------------------------------------------------------
+  // Trozos de interfaz reutilizados por varias vistas
+  // ------------------------------------------------------------------------
+
+  function volver(href, texto) {
+    return '<a class="back-link" href="' + href + '">' + Studdy.icons.atras +
+      Studdy.escapeHtml(texto) + '</a>';
+  }
+
+  function cabecera(titulo, subtitulo, extra) {
+    return '<div class="topbar"><div>' +
+      '<h1 class="topbar__title">' + Studdy.escapeHtml(titulo) + '</h1>' +
+      (subtitulo ? '<p class="topbar__sub">' + Studdy.escapeHtml(subtitulo) + '</p>' : '') +
+      '</div>' + (extra || '') + '</div>';
   }
 
   return {
     start: start,
     state: estado,
     navigate: navegar,
-    reloadNotes: cargarApuntes,
+    reloadNotes: function () { return cargarApuntes().then(cargarContadores); },
     reloadSubjects: cargarAsignaturas,
+    reloadAttempts: cargarIntentos,
     describeLevel: describirNivel,
-    subjectName: subjectName,
+    initials: iniciales,
     findNote: findNote,
+    findSubject: findSubject,
+    subjectName: subjectName,
+    subjectColor: subjectColor,
+    notesOfSubject: notesOfSubject,
+    countsFor: countsFor,
+    bumpCount: bumpCount,
+    rememberNote: recordarApunte,
+    lastNote: ultimoApunte,
+    volver: volver,
+    cabecera: cabecera,
   };
 })();

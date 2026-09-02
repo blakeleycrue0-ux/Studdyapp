@@ -1,132 +1,44 @@
 /* ==========================================================================
-   Exámenes: generación a partir de un apunte, respuesta y corrección.
+   Examen de un apunte: generación, respuesta y corrección.
 
    Las preguntas tipo test se corrigen solas. Las de desarrollo corto se
-   muestran junto a la respuesta esperada para que el estudiante se compare,
-   y no puntúan, porque no hay forma honesta de puntuarlas automáticamente.
+   muestran junto a la respuesta esperada para comparar, y no puntúan, porque
+   no hay forma honesta de puntuarlas automáticamente.
    ========================================================================== */
 
 Studdy.views.exams = (function () {
   'use strict';
 
-  function render(vista, params) {
-    if (params.id) return renderExamen(vista, params.id);
-    return renderLista(vista);
-  }
-
-  // ------------------------------------------------------------------------
-
-  async function renderLista(vista) {
-    var apuntes = Studdy.app.state.notes;
-
-    if (!apuntes.length) {
-      vista.innerHTML = cabecera('Exámenes',
-        'Preguntas con la dificultad de tu curso, generadas desde tus apuntes.') +
-        '<div class="empty">' +
-          '<div class="empty__icon">' + ICONO + '</div>' +
-          '<p class="empty__title">Aún no tienes apuntes</p>' +
-          '<p class="empty__text">Los exámenes se generan a partir de un apunte, ' +
-            'así que primero sube uno.</p>' +
-          '<a class="btn btn--primary" href="#/apuntes/subir">Subir tu primer apunte</a>' +
-        '</div>';
-      return;
-    }
-
-    var client = await Studdy.getClient();
-    var res = await client.from('exams').select('note_id');
-    if (res.error) throw new Error(res.error.message);
-
-    var existentes = {};
-    (res.data || []).forEach(function (e) { existentes[e.note_id] = true; });
-
-    vista.innerHTML =
-      cabecera('Exámenes', 'Elige un apunte y ponte a prueba.') +
-      '<div class="picker">' +
-      apuntes.map(function (apunte) {
-        var tiene = !!existentes[apunte.id];
-        return (
-          '<div class="picker__item">' +
-            '<div class="picker__body">' +
-              '<div class="picker__title">' + Studdy.escapeHtml(Studdy.noteTitle(apunte.content)) + '</div>' +
-              '<div class="picker__meta">' +
-                Studdy.escapeHtml(Studdy.app.subjectName(apunte.subject_id)) +
-                (tiene ? ' · examen guardado' : '') +
-              '</div>' +
-            '</div>' +
-            '<a class="btn ' + (tiene ? 'btn--soft' : 'btn--ghost') + ' btn--sm" ' +
-              'href="#/examenes/' + apunte.id + '">' + (tiene ? 'Hacer' : 'Generar') + '</a>' +
-          '</div>'
-        );
-      }).join('') +
-      '</div>';
-  }
-
-  // ------------------------------------------------------------------------
-
-  async function renderExamen(vista, noteId) {
-    var apunte = Studdy.app.findNote(noteId);
-    if (!apunte) {
-      vista.innerHTML = Studdy.views.notes.volver('#/examenes', 'Exámenes') +
-        Studdy.errorHtml('Ese apunte no existe o ya no está disponible.');
-      return;
-    }
+  async function renderPanel(panel, apunte) {
+    panel.innerHTML = Studdy.loadingHtml('Cargando el examen…');
 
     var client = await Studdy.getClient();
     var res = await client
       .from('exams')
       .select('*')
-      .eq('note_id', noteId)
+      .eq('note_id', apunte.id)
       .order('created_at', { ascending: false })
       .limit(1);
 
     if (res.error) throw new Error(res.error.message);
     var examen = (res.data || [])[0] || null;
 
-    var encabezado =
-      Studdy.views.notes.volver('#/examenes', 'Exámenes') +
-      '<div class="page-head"><div>' +
-        '<h1 class="page-head__title">' + Studdy.escapeHtml(Studdy.noteTitle(apunte.content)) + '</h1>' +
-        '<p class="page-head__sub">' + Studdy.escapeHtml(Studdy.app.subjectName(apunte.subject_id)) + '</p>' +
-      '</div></div>';
-
     if (!examen) {
-      vista.innerHTML = encabezado +
-        '<div class="empty">' +
-          '<div class="empty__icon">' + ICONO + '</div>' +
-          '<p class="empty__title">Este apunte todavía no tiene examen</p>' +
-          '<p class="empty__text">La IA preparará preguntas tipo test y de desarrollo ' +
-            'corto ajustadas a tu curso.</p>' +
-          '<button class="btn btn--primary" id="generar">Generar examen</button>' +
-        '</div>' +
-        '<div id="error" style="margin-top:16px"></div>';
+      panel.innerHTML = Studdy.views.notebook.vacio(
+        Studdy.icons.examen,
+        'Todavía no hay examen',
+        'Preguntas tipo test y de desarrollo corto, con la dificultad de tu curso.',
+        'Generar examen'
+      ) + '<div id="err" style="margin-top:14px"></div>';
 
-      Studdy.$('#generar', vista).addEventListener('click', function () {
-        var boton = this;
-        var error = Studdy.$('#error', vista);
-        error.innerHTML = '';
-        boton.disabled = true;
-        boton.innerHTML = '<span class="spinner"></span> Generando…';
-
-        generar(apunte)
-          .then(function () { renderExamen(vista, noteId); })
-          .catch(function (err) {
-            error.innerHTML = Studdy.errorHtml(err.message);
-            boton.disabled = false;
-            boton.textContent = 'Generar examen';
-          });
-      });
+      conectarGenerar(panel, apunte);
       return;
     }
 
-    var preguntas = normalizar(examen.questions_json);
-    vista.innerHTML = encabezado +
-      '<div id="quiz">' + preguntas.map(pintarPregunta).join('') + '</div>' +
-      '<button class="btn btn--primary btn--lg" id="corregir">Corregir examen</button>';
-
-    Studdy.$('#corregir', vista).addEventListener('click', function () {
-      corregir(vista, preguntas);
-    });
+    pintarExamen(panel, apunte, examen);
   }
+
+  // ------------------------------------------------------------------------
 
   function normalizar(datos) {
     if (Array.isArray(datos)) return datos;
@@ -135,6 +47,20 @@ Studdy.views.exams = (function () {
   }
 
   var LETRAS = ['A', 'B', 'C', 'D'];
+
+  function pintarExamen(panel, apunte, examen) {
+    var preguntas = normalizar(examen.questions_json);
+
+    panel.innerHTML =
+      '<div id="resultado"></div>' +
+      '<div id="quiz">' + preguntas.map(pintarPregunta).join('') + '</div>' +
+      '<button class="btn btn--primary btn--lg btn--block" id="corregir">Corregir examen</button>' +
+      '<div id="err" style="margin-top:14px"></div>';
+
+    Studdy.$('#corregir', panel).addEventListener('click', function () {
+      corregir(panel, apunte, examen, preguntas);
+    });
+  }
 
   function pintarPregunta(pregunta, i) {
     var cuerpo;
@@ -151,17 +77,15 @@ Studdy.views.exams = (function () {
               '</span>' +
             '</label>'
           );
-        }).join('') +
-        '</div>';
+        }).join('') + '</div>';
     } else {
-      cuerpo = '<textarea class="textarea" style="min-height:110px" ' +
-        'data-corta="' + i + '"></textarea>';
+      cuerpo = '<textarea class="textarea" style="min-height:100px" data-corta="' + i + '"></textarea>';
     }
 
     return (
       '<article class="question" data-pregunta="' + i + '">' +
         '<p class="question__num">Pregunta ' + (i + 1) +
-          (pregunta.type === 'corta' ? ' · desarrollo corto' : ' · test') + '</p>' +
+          (pregunta.type === 'corta' ? ' · desarrollo' : ' · test') + '</p>' +
         '<h2 class="question__text">' + Studdy.escapeHtml(pregunta.question) + '</h2>' +
         cuerpo +
       '</article>'
@@ -172,69 +96,150 @@ Studdy.views.exams = (function () {
   // Corrección
   // ------------------------------------------------------------------------
 
-  function corregir(vista, preguntas) {
+  function corregir(panel, apunte, examen, preguntas) {
     var aciertos = 0;
-    var totalTest = 0;
+    var fallos = 0;
+    var desarrollo = 0;
 
     preguntas.forEach(function (pregunta, i) {
-      var articulo = Studdy.$('[data-pregunta="' + i + '"]', vista);
+      var articulo = Studdy.$('[data-pregunta="' + i + '"]', panel);
 
       if (pregunta.type === 'test') {
-        totalTest++;
-
         var elegido = Studdy.$('input[name="q' + i + '"]:checked', articulo);
         var indiceElegido = elegido ? parseInt(elegido.value, 10) : null;
         var acertada = indiceElegido === pregunta.correct_option;
 
-        if (acertada) aciertos++;
+        if (acertada) aciertos++; else fallos++;
 
         articulo.classList.add(acertada ? 'is-correct' : 'is-wrong');
 
         Studdy.$$('.answer', articulo).forEach(function (etiqueta, j) {
           var caja = Studdy.$('.answer__box', etiqueta);
-          var input = Studdy.$('input', etiqueta);
-          input.disabled = true;
+          Studdy.$('input', etiqueta).disabled = true;
           if (j === pregunta.correct_option) caja.classList.add('is-right');
           else if (j === indiceElegido) caja.classList.add('is-chosen-wrong');
         });
 
         articulo.insertAdjacentHTML('beforeend',
           acertada
-            ? '<p class="verdict verdict--ok">' + ICONO_OK + 'Correcta</p>'
-            : '<p class="verdict verdict--ko">' + ICONO_KO +
+            ? '<p class="verdict verdict--ok">' + Studdy.icons.ok + 'Correcta</p>'
+            : '<p class="verdict verdict--ko">' + Studdy.icons.ko +
               (indiceElegido === null ? 'Sin responder' : 'Incorrecta') +
               ' · la correcta era la ' + LETRAS[pregunta.correct_option] + '</p>');
       } else {
+        desarrollo++;
         var textarea = Studdy.$('[data-corta="' + i + '"]', articulo);
         if (textarea) textarea.disabled = true;
 
         articulo.insertAdjacentHTML('beforeend',
           '<div class="expected"><b>Respuesta esperada</b>' +
             Studdy.escapeHtml(pregunta.expected_answer || '') + '</div>' +
-          '<p class="verdict verdict--info">' + ICONO_INFO +
-            'Compárala con la tuya. Las preguntas de desarrollo no puntúan.</p>');
+          '<p class="verdict verdict--info">' + Studdy.icons.info +
+            'Compárala con la tuya. Las de desarrollo no puntúan.</p>');
       }
     });
 
-    var boton = Studdy.$('#corregir', vista);
-    boton.remove();
+    Studdy.$('#corregir', panel).remove();
 
-    var resumen = document.createElement('div');
-    resumen.className = 'score';
-    resumen.innerHTML =
-      '<div class="score__value">' + aciertos + ' / ' + totalTest + '</div>' +
-      '<p class="score__label">' +
+    var totalTest = aciertos + fallos;
+    var pct = totalTest ? Math.round((aciertos / totalTest) * 100) : 0;
+
+    Studdy.$('#resultado', panel).innerHTML =
+      resultado(pct, aciertos, fallos, desarrollo, totalTest) +
+      '<div style="display:flex;gap:9px;margin-bottom:20px">' +
+        '<button class="btn btn--ghost btn--sm" id="repetir">Repetir</button>' +
+        '<button class="btn btn--ghost btn--sm" id="otro">Generar otro examen</button>' +
+      '</div>';
+
+    Studdy.$('#repetir', panel).addEventListener('click', function () {
+      pintarExamen(panel, apunte, examen);
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    conectarGenerar(panel, apunte, '#otro');
+
+    Studdy.$('#resultado', panel).scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    if (totalTest) guardarIntento(examen.id, aciertos, totalTest);
+  }
+
+  function resultado(pct, aciertos, fallos, desarrollo, totalTest) {
+    var veredicto;
+    if (!totalTest) veredicto = 'Examen de desarrollo';
+    else if (pct >= 90) veredicto = 'Te lo sabes';
+    else if (pct >= 70) veredicto = 'Bien, casi está';
+    else if (pct >= 50) veredicto = 'A medias';
+    else veredicto = 'Toca repasar esto';
+
+    return (
+      '<div class="result">' +
         (totalTest
-          ? 'preguntas tipo test acertadas'
-          : 'este examen no tiene preguntas tipo test') +
-      '</p>';
+          ? '<div class="ring ring--lg result__ring" style="--pct:' + pct + '">' +
+              '<div class="ring__inner">' + pct + '%</div>' +
+            '</div>'
+          : '') +
+        '<p class="result__verdict">' + Studdy.escapeHtml(veredicto) + '</p>' +
+        '<p class="result__detail">' +
+          (totalTest
+            ? aciertos + ' de ' + totalTest + ' preguntas tipo test'
+            : 'Compara tus respuestas con las esperadas') +
+        '</p>' +
+        '<div class="result__breakdown">' +
+          celda('ok', aciertos, 'acertadas') +
+          celda('ko', fallos, 'falladas') +
+          celda('na', desarrollo, 'a comparar') +
+        '</div>' +
+      '</div>'
+    );
+  }
 
-    var quiz = Studdy.$('#quiz', vista);
-    quiz.parentNode.insertBefore(resumen, quiz);
-    resumen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  function celda(tipo, valor, etiqueta) {
+    return '<div class="result__cell result__cell--' + tipo + '">' +
+      '<b>' + valor + '</b><span>' + Studdy.escapeHtml(etiqueta) + '</span></div>';
+  }
+
+  // Guarda el intento para poder enseñar el porcentaje de acierto en Inicio.
+  // Si la tabla todavía no existe, se ignora sin romper nada.
+  async function guardarIntento(examId, score, total) {
+    try {
+      var client = await Studdy.getClient();
+      var userRes = await client.auth.getUser();
+      var user = userRes.data ? userRes.data.user : null;
+      if (!user) return;
+
+      var out = await client.from('exam_attempts')
+        .insert({ exam_id: examId, profile_id: user.id, score: score, total: total });
+
+      if (!out.error) await Studdy.app.reloadAttempts();
+    } catch (e) { /* la tabla es opcional */ }
   }
 
   // ------------------------------------------------------------------------
+
+  function conectarGenerar(panel, apunte, selector) {
+    var boton = Studdy.$(selector || '#generar', panel);
+    if (!boton) return;
+
+    var etiqueta = boton.textContent;
+
+    boton.addEventListener('click', function () {
+      var err = Studdy.$('#err', panel);
+      if (err) err.innerHTML = '';
+      boton.disabled = true;
+      boton.innerHTML = '<span class="spinner"></span> Generando…';
+
+      generar(apunte)
+        .then(function () {
+          Studdy.app.bumpCount(apunte.id, 'exams');
+          Studdy.app.navigate('#/n/' + apunte.id + '/examen');
+        })
+        .catch(function (e) {
+          if (err) err.innerHTML = Studdy.errorHtml(e.message);
+          boton.disabled = false;
+          boton.textContent = etiqueta;
+        });
+    });
+  }
 
   async function generar(apunte) {
     var respuesta = await Studdy.ai('exam', { content: apunte.content });
@@ -247,31 +252,5 @@ Studdy.views.exams = (function () {
     if (out.error) throw new Error(out.error.message);
   }
 
-  function cabecera(titulo, subtitulo) {
-    return '<div class="page-head"><div>' +
-      '<h1 class="page-head__title">' + Studdy.escapeHtml(titulo) + '</h1>' +
-      '<p class="page-head__sub">' + Studdy.escapeHtml(subtitulo) + '</p>' +
-      '</div></div>';
-  }
-
-  var ICONO =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
-    'stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M8.5 3.5h-2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-14a2 2 0 0 0-2-2h-2"/>' +
-    '<rect x="8.5" y="1.8" width="7" height="4" rx="1.4"/><path d="M8.6 13.2l2 2 4.3-4.4"/></svg>';
-
-  var ICONO_OK =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
-    'stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
-
-  var ICONO_KO =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
-    'stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-
-  var ICONO_INFO =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
-    'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/>' +
-    '<path d="M12 11v5M12 7.8h.01"/></svg>';
-
-  return { render: render };
+  return { renderPanel: renderPanel };
 })();

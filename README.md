@@ -52,11 +52,19 @@ anónimas se pueden convertir en permanentes sin perder los datos ya guardados.
 
 ## 2. Estructura
 
+La app es móvil primero: barra de navegación abajo (Inicio · Apuntes · Chat ·
+Perfil) y contenido en una sola columna.
+
+Cada apunte funciona como un **cuaderno**: al abrirlo tienes dentro su esquema,
+sus flashcards, su examen, su presentación y un chat sobre ese apunte concreto,
+en pestañas. El contenido se acumula alrededor del apunte en lugar de repartirse
+por secciones sueltas.
+
 ```
 index.html            Landing pública
 login.html            Acceso: un único botón
 onboarding.html       Formulario de 4 pasos
-app.html              Aplicación (dashboard y secciones)
+app.html              Aplicación (armazón + barra inferior)
 
 css/
   base.css            Tokens de diseño, reset y componentes comunes
@@ -66,25 +74,29 @@ css/
 
 js/
   core.js             Config, sesión, llamadas a la IA y utilidades
+  icons.js            Iconos compartidos
   login.js            Pantalla de acceso
   onboarding.js       Los 4 pasos y el guardado del perfil
   app.js              Estado, carga de datos y enrutador por hash
   views/
-    notes.js          Dashboard, subida de apuntes y esquema
+    home.js           Inicio: accesos rápidos, continuar, progreso, asignaturas
+    notes.js          Lista de apuntes con filtro, y subida
+    notebook.js       El cuaderno: pestañas del apunte y esquema
     flashcards.js     Generación y repaso de tarjetas
-    exams.js          Generación, respuesta y corrección
-    chat.js           Chat con la IA
-    presentations.js  Generación y carrusel de diapositivas
+    exams.js          Generación, respuesta, corrección y resultado
+    presentations.js  Desde un apunte o desde un tema suelto, con carrusel
+    chat.js           Chat general y chat sobre un apunte
+    profile.js        Datos del perfil y cierre de sesión
 
 netlify/functions/
   config.js           Entrega la configuración pública de Supabase
   ai.js               Proxy hacia la API de Anthropic
 
-supabase/schema.sql   Tablas, RLS y políticas
+supabase/
+  schema.sql                  Tablas, RLS y políticas (instalación completa)
+  migracion-01-intentos.sql   Solo la tabla exam_attempts, para bases ya creadas
 netlify.toml          Publicación, redirecciones /api/* y cabeceras
 ```
-
----
 
 ## 3. Cómo se protegen las credenciales
 
@@ -132,9 +144,14 @@ Modelo en uso: `claude-sonnet-5`. Se cambia en la constante `MODEL` de
 | `flashcards` | Preguntas y respuestas. |
 | `exams` | Preguntas del examen, en `questions_json`. |
 | `presentations` | Diapositivas, en `content_json`. |
+| `exam_attempts` | Resultado de cada examen corregido. Alimenta el porcentaje de aciertos del Inicio. |
 
-Las siete tienen RLS activado y políticas de `select`, `insert`, `update` y
+Todas tienen RLS activado y políticas de `select`, `insert`, `update` y
 `delete` restringidas al propietario.
+
+**`exam_attempts` es opcional.** Si esa tabla todavía no existe, la app funciona
+igual: simplemente no muestra el porcentaje de aciertos. Para añadirla a una base
+ya creada, ejecuta `supabase/migracion-01-intentos.sql`.
 
 **Una nota sobre `presentations`:** además de `note_id` lleva `profile_id`, y
 `note_id` admite nulos. Es porque una presentación se puede generar escribiendo
