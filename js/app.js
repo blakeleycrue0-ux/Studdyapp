@@ -143,13 +143,22 @@ Studdy.app = (function () {
     n: function (p) { return Studdy.views.notebook.render(vista, p); },
     chat: function (p) { return Studdy.views.chat.render(vista, p); },
     p: function (p) { return Studdy.views.presentations.render(vista, p); },
+    agenda: function (p) { return Studdy.views.agenda.render(vista, p); },
+    repasar: function (p) { return Studdy.views.review.render(vista, p); },
+    ejercicios: function (p) { return Studdy.views.exercises.render(vista, p); },
+    trabajos: function (p) { return Studdy.views.writing.render(vista, p); },
+    tema: function () { return Studdy.views.presentations.renderTopic(vista); },
     perfil: function (p) { return Studdy.views.profile.render(vista, p); },
   };
 
   // Qué pestaña de abajo se ilumina en cada sección.
   var TAB_DE_SECCION = {
-    inicio: 'inicio', apuntes: 'apuntes', n: 'apuntes',
-    p: 'apuntes', chat: 'chat', perfil: 'perfil',
+    inicio: 'inicio', agenda: 'inicio', ejercicios: 'inicio',
+    trabajos: 'inicio', tema: 'inicio', p: 'inicio',
+    apuntes: 'apuntes', n: 'apuntes',
+    repasar: 'repasar',
+    chat: 'chat',
+    perfil: 'perfil',
   };
 
   function enrutar() {

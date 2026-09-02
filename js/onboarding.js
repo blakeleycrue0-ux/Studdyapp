@@ -10,38 +10,10 @@
 (function () {
   'use strict';
 
-  // Familias profesionales oficiales de la Formación Profesional en España.
-  var FAMILIAS_FP = [
-    'Actividades Físicas y Deportivas',
-    'Administración y Gestión',
-    'Agraria',
-    'Artes Gráficas',
-    'Artes y Artesanías',
-    'Comercio y Marketing',
-    'Edificación y Obra Civil',
-    'Electricidad y Electrónica',
-    'Energía y Agua',
-    'Fabricación Mecánica',
-    'Hostelería y Turismo',
-    'Imagen Personal',
-    'Imagen y Sonido',
-    'Industrias Alimentarias',
-    'Industrias Extractivas',
-    'Informática y Comunicaciones',
-    'Instalación y Mantenimiento',
-    'Madera, Mueble y Corcho',
-    'Marítimo-Pesquera',
-    'Química',
-    'Sanidad',
-    'Seguridad y Medio Ambiente',
-    'Servicios Socioculturales y a la Comunidad',
-    'Textil, Confección y Piel',
-    'Transporte y Mantenimiento de Vehículos',
-    'Vidrio y Cerámica',
-  ];
+  // Las familias y los ciclos salen del catálogo de js/data/fp.js
+  var FAMILIAS_FP = Studdy.fp.familias;
 
   var RAMAS_BACHILLERATO = ['Ciencias', 'Humanidades y CCSS', 'Artes'];
-  var GRADOS_FP = ['Básico', 'Medio', 'Superior'];
 
   // Estado: todo vacío al empezar.
   var estado = {
@@ -158,11 +130,11 @@
 
       case 'FP':
         el.step3Question.textContent = 'Cuéntanos más de tu ciclo';
-        el.step3Hint.textContent = 'El grado, la familia profesional y el nombre exacto del ciclo.';
+        el.step3Hint.textContent = 'Elige el grado y la familia, y te salen sus ciclos.';
         html =
-          campoSelect('fp_grade', 'Grado', GRADOS_FP) +
           campoSelect('fp_family', 'Familia profesional', FAMILIAS_FP) +
-          campoTexto('fp_cycle', 'Ciclo formativo');
+          '<div id="grado-wrap"></div>' +
+          '<div id="ciclo-wrap"></div>';
         break;
 
       case 'Universidad':
@@ -181,12 +153,110 @@
 
     el.step3Fields.innerHTML = html;
 
+    if (estado.level === 'FP') refrescarFp();
+    conectarCampos();
+  }
+
+  // Conecta (o reconecta) todos los campos del paso 3 con el estado.
+  function conectarCampos() {
     Studdy.$$('[data-campo]', el.step3Fields).forEach(function (campo) {
+      if (campo.dataset.conectado) return;
+      campo.dataset.conectado = '1';
+
       campo.addEventListener(campo.tagName === 'SELECT' ? 'change' : 'input', function () {
         estado[campo.dataset.campo] = campo.value.trim();
+
+        // La familia decide qué grados existen; grado y familia deciden los ciclos.
+        if (campo.dataset.campo === 'fp_family') {
+          estado.fp_grade = '';
+          estado.fp_cycle = '';
+          refrescarFp();
+          conectarCampos();
+        } else if (campo.dataset.campo === 'fp_grade') {
+          estado.fp_cycle = '';
+          refrescarCiclos();
+          conectarCampos();
+        }
+
+        // "Otro" abre un campo de texto para escribir el ciclo a mano.
+        if (campo.dataset.campo === 'fp_cycle_pick') {
+          estado.fp_cycle = campo.value === '__otro__' ? '' : campo.value;
+          refrescarOtro(campo.value === '__otro__');
+          conectarCampos();
+        }
+
         actualizarNavegacion();
       });
     });
+  }
+
+  // Solo se ofrecen los grados que esa familia tiene realmente.
+  function refrescarFp() {
+    var wrap = Studdy.$('#grado-wrap', el.step3Fields);
+    if (!wrap) return;
+
+    if (!estado.fp_family) {
+      wrap.innerHTML = '';
+      var ciclos = Studdy.$('#ciclo-wrap', el.step3Fields);
+      if (ciclos) ciclos.innerHTML = '';
+      return;
+    }
+
+    wrap.innerHTML = '<div style="margin-top:22px">' +
+      campoSelect('fp_grade', 'Grado', Studdy.fp.grados(estado.fp_family)) + '</div>';
+
+    refrescarCiclos();
+  }
+
+  // Pinta el selector de ciclo con los que existen para ese grado y familia.
+  function refrescarCiclos() {
+    var wrap = Studdy.$('#ciclo-wrap', el.step3Fields);
+    if (!wrap) return;
+
+    if (!estado.fp_grade || !estado.fp_family) {
+      wrap.innerHTML = '';
+      return;
+    }
+
+    var lista = Studdy.fp.ciclos(estado.fp_family, estado.fp_grade);
+
+    // Sin ciclos recogidos para esa combinación, se escribe a mano y ya.
+    if (!lista.length) {
+      wrap.innerHTML = '<div style="margin-top:22px">' +
+        campoTexto('fp_cycle', 'Ciclo formativo') + '</div>';
+      return;
+    }
+
+    var opciones = lista.map(function (c) {
+      return '<option value="' + Studdy.escapeHtml(c) + '"' +
+        (estado.fp_cycle === c ? ' selected' : '') + '>' + Studdy.escapeHtml(c) + '</option>';
+    }).join('');
+
+    var esOtro = !!estado.fp_cycle && lista.indexOf(estado.fp_cycle) === -1;
+    var sinElegir = !estado.fp_cycle && !esOtro;
+
+    wrap.innerHTML =
+      '<label class="field" style="margin-top:22px">' +
+        '<span class="field__label">Ciclo formativo</span>' +
+        '<select class="select" data-campo="fp_cycle_pick">' +
+          '<option value="" disabled hidden' + (sinElegir ? ' selected' : '') + '>' +
+            'Selecciona tu ciclo</option>' +
+          opciones +
+          '<option value="__otro__"' + (esOtro ? ' selected' : '') + '>' +
+            'Mi ciclo no está en la lista</option>' +
+        '</select>' +
+      '</label>' +
+      '<div id="otro-wrap"></div>';
+
+    refrescarOtro(esOtro);
+  }
+
+  function refrescarOtro(mostrar) {
+    var wrap = Studdy.$('#otro-wrap', el.step3Fields);
+    if (!wrap) return;
+    wrap.innerHTML = mostrar
+      ? '<div style="margin-top:22px">' + campoTexto('fp_cycle', 'Escribe tu ciclo') + '</div>'
+      : '';
   }
 
   // Un <select> siempre arranca en la opción vacía: nada preseleccionado.

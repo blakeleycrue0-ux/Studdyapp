@@ -1,11 +1,34 @@
 /* ==========================================================================
    Presentaciones.
-   Dentro de un apunte, como una pestaña más del cuaderno; y aparte, a partir
-   de un tema escrito a mano, sin necesidad de tener el apunte subido.
+
+   Diapositivas con diseño real (cuatro temas y cinco maquetaciones), pensadas
+   para exponer en clase, y exportables a PowerPoint y PDF.
+
+   Se generan desde un apunte —como pestaña del cuaderno— o desde un tema
+   escrito a mano, sin apunte de por medio.
    ========================================================================== */
 
 Studdy.views.presentations = (function () {
   'use strict';
+
+  var TEMAS = [
+    { id: 'th-esmeralda', nombre: 'Esmeralda', bg: '0B3D2C', bg2: '0A5636', ink: 'FFFFFF', soft: 'A9E3C7', acc: '4ADE80' },
+    { id: 'th-papel',     nombre: 'Papel',     bg: 'FAF8F3', bg2: 'F2EDE1', ink: '1D1A14', soft: '6B6355', acc: '0D7A4F' },
+    { id: 'th-noche',     nombre: 'Noche',     bg: '12151C', bg2: '1B202B', ink: 'F2F5F8', soft: '98A4B8', acc: '6BA7FF' },
+    { id: 'th-coral',     nombre: 'Coral',     bg: 'FFF6F3', bg2: 'FFE8E0', ink: '3D1D13', soft: '8A5A4A', acc: 'E0603A' },
+  ];
+
+  var CLAVE_TEMA = 'studdy:tema-diapos';
+
+  function temaGuardado() {
+    var id;
+    try { id = localStorage.getItem(CLAVE_TEMA); } catch (e) { /* modo privado */ }
+    return TEMAS.filter(function (t) { return t.id === id; })[0] || TEMAS[0];
+  }
+
+  function guardarTema(id) {
+    try { localStorage.setItem(CLAVE_TEMA, id); } catch (e) { /* modo privado */ }
+  }
 
   // ------------------------------------------------------------------------
   // Pestaña dentro del cuaderno
@@ -28,7 +51,7 @@ Studdy.views.presentations = (function () {
       panel.innerHTML = Studdy.views.notebook.vacio(
         Studdy.icons.presentacion,
         'Todavía no hay presentación',
-        'Diapositivas con título y puntos clave, sacadas de este apunte.',
+        'Diapositivas con diseño, sacadas de este apunte y listas para exponer.',
         'Generar presentación'
       ) + '<div id="err" style="margin-top:14px"></div>';
 
@@ -37,32 +60,28 @@ Studdy.views.presentations = (function () {
     }
 
     var actual = guardadas[0];
-    var contenido = actual.content_json || {};
-    var diapositivas = contenido.slides || [];
 
     panel.innerHTML =
-      (guardadas.length > 1 ? selector(guardadas, actual.id) : '') +
-      '<div id="carrusel"></div>' +
-      '<div style="margin-top:18px;text-align:center">' +
-        '<button class="btn btn--ghost btn--sm" id="otra">Generar otra</button>' +
+      (guardadas.length > 1 ? selectorVersion(guardadas, actual.id) : '') +
+      '<div id="deck"></div>' +
+      '<div style="margin-top:16px;text-align:center">' +
+        '<button class="btn btn--ghost btn--sm" id="otra">Generar otra versión</button>' +
         '<div id="err" style="margin-top:12px"></div>' +
       '</div>';
 
-    montarCarrusel(Studdy.$('#carrusel', panel), diapositivas, contenido.title);
+    montarDeck(Studdy.$('#deck', panel), actual.content_json || {});
     conectarGenerar(panel, apunte, '#otra');
 
     var lista = Studdy.$('#version', panel);
     if (lista) {
       lista.addEventListener('change', function () {
         var elegida = guardadas.filter(function (p) { return p.id === lista.value; })[0];
-        if (!elegida) return;
-        var c = elegida.content_json || {};
-        montarCarrusel(Studdy.$('#carrusel', panel), c.slides || [], c.title);
+        if (elegida) montarDeck(Studdy.$('#deck', panel), elegida.content_json || {});
       });
     }
   }
 
-  function selector(guardadas, actualId) {
+  function selectorVersion(guardadas, actualId) {
     return (
       '<label class="field" style="margin-bottom:14px;display:block">' +
         '<span class="field__label">Versión</span>' +
@@ -71,8 +90,7 @@ Studdy.views.presentations = (function () {
           var c = p.content_json || {};
           return '<option value="' + p.id + '"' + (p.id === actualId ? ' selected' : '') + '>' +
             Studdy.escapeHtml(c.title || 'Presentación') + ' · ' +
-            Studdy.formatDate(p.created_at) + (i === 0 ? ' (última)' : '') +
-            '</option>';
+            Studdy.formatDate(p.created_at) + (i === 0 ? ' (última)' : '') + '</option>';
         }).join('') +
         '</select>' +
       '</label>'
@@ -80,15 +98,14 @@ Studdy.views.presentations = (function () {
   }
 
   // ------------------------------------------------------------------------
-  // Presentación a partir de un tema suelto
+  // Desde un tema suelto
   // ------------------------------------------------------------------------
 
   function renderTopic(vista) {
     vista.innerHTML =
-      Studdy.app.volver('#/apuntes', 'Apuntes') +
+      Studdy.app.volver('#/inicio', 'Inicio') +
       Studdy.app.cabecera('Presentación de un tema',
-        'Sin apunte de por medio: escribe el tema y la IA monta las diapositivas.') +
-
+        'Sin apunte de por medio: escribe el tema y monto las diapositivas.') +
       '<div class="block">' +
         '<label class="field" style="margin-bottom:18px;display:block">' +
           '<span class="field__label">Tema</span>' +
@@ -103,9 +120,7 @@ Studdy.views.presentations = (function () {
     var boton = Studdy.$('#generar', vista);
     var err = Studdy.$('#err', vista);
 
-    input.addEventListener('input', function () {
-      boton.disabled = !input.value.trim();
-    });
+    input.addEventListener('input', function () { boton.disabled = !input.value.trim(); });
 
     boton.addEventListener('click', function () {
       err.innerHTML = '';
@@ -125,81 +140,299 @@ Studdy.views.presentations = (function () {
   }
 
   // ------------------------------------------------------------------------
-  // Presentación suelta, vista a pantalla completa
+  // Presentación suelta
   // ------------------------------------------------------------------------
 
   async function render(vista, partes) {
-    var id = partes[0];
-
     var client = await Studdy.getClient();
-    var res = await client.from('presentations').select('*').eq('id', id).maybeSingle();
+    var res = await client.from('presentations').select('*').eq('id', partes[0]).maybeSingle();
     if (res.error) throw new Error(res.error.message);
 
-    var presentacion = res.data;
-    if (!presentacion) {
-      vista.innerHTML = Studdy.app.volver('#/apuntes', 'Apuntes') +
+    if (!res.data) {
+      vista.innerHTML = Studdy.app.volver('#/inicio', 'Inicio') +
         Studdy.errorHtml('Esa presentación no existe o ya no está disponible.');
       return;
     }
 
-    var contenido = presentacion.content_json || {};
+    var contenido = res.data.content_json || {};
 
     vista.innerHTML =
-      Studdy.app.volver('#/apuntes', 'Apuntes') +
-      Studdy.app.cabecera(contenido.title || presentacion.topic || 'Presentación') +
-      '<div id="carrusel"></div>';
+      Studdy.app.volver('#/inicio', 'Inicio') +
+      Studdy.app.cabecera(contenido.title || res.data.topic || 'Presentación') +
+      '<div id="deck"></div>';
 
-    montarCarrusel(Studdy.$('#carrusel', vista), contenido.slides || [], contenido.title);
+    montarDeck(Studdy.$('#deck', vista), contenido);
   }
 
   // ------------------------------------------------------------------------
-  // Carrusel
+  // El pase de diapositivas
   // ------------------------------------------------------------------------
 
-  function montarCarrusel(contenedor, diapositivas, titulo) {
+  function montarDeck(contenedor, contenido) {
+    var diapositivas = contenido.slides || [];
     if (!diapositivas.length) {
       contenedor.innerHTML = Studdy.errorHtml('Esta presentación no tiene diapositivas.');
       return;
     }
 
+    var tema = temaGuardado();
     var indice = 0;
 
     contenedor.innerHTML =
-      '<div id="slide"></div>' +
+      '<div class="theme-row" id="temas">' +
+        TEMAS.map(function (t) {
+          return '<button class="theme-dot ' + t.id + (t.id === tema.id ? ' is-on' : '') +
+            '" data-tema="' + t.id + '" title="' + t.nombre + '" aria-label="Tema ' + t.nombre + '"></button>';
+        }).join('') +
+      '</div>' +
+      '<div class="deck-frame ' + tema.id + '" id="frame"></div>' +
       '<div class="carousel__nav">' +
         '<button class="icon-btn" id="prev" aria-label="Anterior">' + Studdy.icons.chevronIzq + '</button>' +
         '<span class="carousel__count" id="count"></span>' +
         '<button class="icon-btn" id="next" aria-label="Siguiente">' + Studdy.icons.chevron + '</button>' +
-      '</div>';
+      '</div>' +
+      '<div class="thumbs ' + tema.id + '" id="thumbs"></div>' +
+      '<div class="action-row" style="margin-top:14px">' +
+        '<button class="btn btn--soft btn--sm" id="pptx">Descargar PowerPoint</button>' +
+        '<button class="btn btn--soft btn--sm" id="pdf">Descargar PDF</button>' +
+      '</div>' +
+      '<div id="exp-err" style="margin-top:12px"></div>';
 
-    var slide = Studdy.$('#slide', contenedor);
+    var frame = Studdy.$('#frame', contenedor);
+    var thumbs = Studdy.$('#thumbs', contenedor);
     var contador = Studdy.$('#count', contenedor);
     var anterior = Studdy.$('#prev', contenedor);
     var siguiente = Studdy.$('#next', contenedor);
 
     function pintar() {
-      var d = diapositivas[indice];
-      var puntos = Array.isArray(d.points) ? d.points : [];
-
-      slide.innerHTML =
-        '<div class="slide' + (indice === 0 ? ' slide--cover' : '') + '">' +
-          '<h2 class="slide__title">' + Studdy.escapeHtml(d.title) + '</h2>' +
-          '<ul class="slide__points">' +
-            puntos.map(function (p) { return '<li>' + Studdy.escapeHtml(p) + '</li>'; }).join('') +
-          '</ul>' +
-        '</div>';
-
+      frame.innerHTML = htmlDiapositiva(diapositivas[indice], indice, diapositivas.length);
       contador.textContent = (indice + 1) + ' / ' + diapositivas.length;
       anterior.disabled = indice === 0;
       siguiente.disabled = indice === diapositivas.length - 1;
+
+      Studdy.$$('.thumb', thumbs).forEach(function (t, i) {
+        t.classList.toggle('is-on', i === indice);
+      });
     }
+
+    thumbs.innerHTML = diapositivas.map(function (d, i) {
+      return '<button class="thumb" data-i="' + i + '" aria-label="Diapositiva ' + (i + 1) + '">' +
+        '<span></span><b></b></button>';
+    }).join('');
+
+    thumbs.addEventListener('click', function (e) {
+      var t = e.target.closest('.thumb');
+      if (!t) return;
+      indice = parseInt(t.dataset.i, 10);
+      pintar();
+    });
 
     anterior.addEventListener('click', function () { if (indice > 0) { indice--; pintar(); } });
     siguiente.addEventListener('click', function () {
       if (indice < diapositivas.length - 1) { indice++; pintar(); }
     });
 
+    Studdy.$('#temas', contenedor).addEventListener('click', function (e) {
+      var b = e.target.closest('[data-tema]');
+      if (!b) return;
+      tema = TEMAS.filter(function (t) { return t.id === b.dataset.tema; })[0];
+      guardarTema(tema.id);
+
+      TEMAS.forEach(function (t) {
+        frame.classList.remove(t.id);
+        thumbs.classList.remove(t.id);
+      });
+      frame.classList.add(tema.id);
+      thumbs.classList.add(tema.id);
+
+      Studdy.$$('[data-tema]', contenedor).forEach(function (x) {
+        x.classList.toggle('is-on', x.dataset.tema === tema.id);
+      });
+    });
+
+    Studdy.$('#pptx', contenedor).addEventListener('click', function () {
+      exportar(this, Studdy.$('#exp-err', contenedor), function () {
+        return exportarPptx(contenido, diapositivas, tema);
+      });
+    });
+
+    Studdy.$('#pdf', contenedor).addEventListener('click', function () {
+      exportarPdf(contenido, diapositivas, tema);
+    });
+
     pintar();
+  }
+
+  function htmlDiapositiva(d, i, total) {
+    var layout = ['portada', 'puntos', 'columnas', 'destacado', 'cierre'].indexOf(d.layout) >= 0
+      ? d.layout : (i === 0 ? 'portada' : 'puntos');
+
+    var puntos = (Array.isArray(d.points) ? d.points : []).map(function (p) {
+      return '<li>' + Studdy.escapeHtml(p) + '</li>';
+    }).join('');
+
+    var eyebrow = layout === 'cierre' ? 'Para terminar'
+      : (layout === 'destacado' ? 'Idea clave' : '');
+
+    return (
+      '<div class="slide slide--' + layout + '">' +
+        (layout === 'portada' ? '<span class="slide__rule"></span>' : '') +
+        (eyebrow ? '<p class="slide__eyebrow">' + eyebrow + '</p>' : '') +
+        '<h2 class="slide__title">' + Studdy.escapeHtml(d.title) + '</h2>' +
+        '<ul class="slide__points">' + puntos + '</ul>' +
+        (layout === 'portada' ? '' : '<span class="slide__num">' + (i + 1) + '/' + total + '</span>') +
+      '</div>'
+    );
+  }
+
+  // ------------------------------------------------------------------------
+  // Exportación
+  // ------------------------------------------------------------------------
+
+  function exportar(boton, err, tarea) {
+    var etiqueta = boton.textContent;
+    err.innerHTML = '';
+    boton.disabled = true;
+    boton.innerHTML = '<span class="spinner"></span> Preparando…';
+
+    Promise.resolve()
+      .then(tarea)
+      .catch(function (e) { err.innerHTML = Studdy.errorHtml(e.message); })
+      .then(function () {
+        boton.disabled = false;
+        boton.textContent = etiqueta;
+      });
+  }
+
+  // PptxGenJS se carga solo cuando hace falta, no en cada visita a la app.
+  function cargarPptx() {
+    if (window.PptxGenJS) return Promise.resolve(window.PptxGenJS);
+
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js';
+      s.onload = function () {
+        if (window.PptxGenJS) resolve(window.PptxGenJS);
+        else reject(new Error('No se ha podido cargar el generador de PowerPoint.'));
+      };
+      s.onerror = function () {
+        reject(new Error('No se ha podido cargar el generador de PowerPoint. Comprueba tu conexión.'));
+      };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function exportarPptx(contenido, diapositivas, tema) {
+    var Pptx = await cargarPptx();
+    var pptx = new Pptx();
+
+    pptx.layout = 'LAYOUT_16x9';
+    pptx.title = contenido.title || 'Presentación';
+
+    diapositivas.forEach(function (d, i) {
+      var layout = d.layout || (i === 0 ? 'portada' : 'puntos');
+      var slide = pptx.addSlide();
+      slide.background = { color: tema.bg };
+
+      // Círculo de acento, como en pantalla
+      slide.addShape(pptx.ShapeType.ellipse, {
+        x: 7.6, y: 3.6, w: 3.2, h: 3.2,
+        fill: { color: tema.acc, transparency: 90 },
+        line: { color: tema.acc, transparency: 100 },
+      });
+
+      var puntos = Array.isArray(d.points) ? d.points : [];
+
+      if (layout === 'portada') {
+        slide.addShape(pptx.ShapeType.roundRect, {
+          x: 0.6, y: 1.9, w: 1.2, h: 0.14,
+          fill: { color: tema.acc }, line: { color: tema.acc },
+        });
+        slide.addText(d.title || '', {
+          x: 0.6, y: 2.2, w: 8.4, h: 1.6,
+          fontSize: 40, bold: true, color: tema.ink, fontFace: 'Arial',
+        });
+        slide.addText(puntos.join('  ·  '), {
+          x: 0.6, y: 3.8, w: 8.4, h: 0.9,
+          fontSize: 18, color: tema.soft, fontFace: 'Arial',
+        });
+        return;
+      }
+
+      if (layout === 'destacado') {
+        slide.addText('IDEA CLAVE', {
+          x: 0.6, y: 0.7, w: 8.4, h: 0.4,
+          fontSize: 12, bold: true, color: tema.acc, charSpacing: 2, fontFace: 'Arial',
+        });
+        slide.addText(d.title || '', {
+          x: 0.6, y: 1.3, w: 8.4, h: 0.8,
+          fontSize: 20, color: tema.soft, fontFace: 'Arial',
+        });
+        slide.addText(puntos.join('\n'), {
+          x: 0.8, y: 2.2, w: 8, h: 2.2,
+          fontSize: 30, bold: true, color: tema.ink, align: 'center', fontFace: 'Arial',
+        });
+        return;
+      }
+
+      slide.addText(d.title || '', {
+        x: 0.6, y: 0.6, w: 8.4, h: 1,
+        fontSize: 28, bold: true, color: tema.ink, fontFace: 'Arial',
+      });
+
+      var vinetas = puntos.map(function (p) {
+        return { text: p, options: { bullet: { code: '25CF' }, color: tema.ink, fontSize: 16, breakLine: true } };
+      });
+
+      if (layout === 'columnas' && puntos.length >= 4) {
+        var mitad = Math.ceil(puntos.length / 2);
+        slide.addText(vinetas.slice(0, mitad), { x: 0.6, y: 1.9, w: 4.1, h: 3, fontFace: 'Arial' });
+        slide.addText(vinetas.slice(mitad), { x: 5, y: 1.9, w: 4.1, h: 3, fontFace: 'Arial' });
+      } else {
+        slide.addText(vinetas, { x: 0.6, y: 1.9, w: 8.4, h: 3, fontFace: 'Arial' });
+      }
+
+      slide.addText((i + 1) + '/' + diapositivas.length, {
+        x: 8.4, y: 4.9, w: 1, h: 0.3,
+        fontSize: 10, color: tema.soft, align: 'right', fontFace: 'Arial',
+      });
+    });
+
+    await pptx.writeFile({ fileName: nombreArchivo(contenido) + '.pptx' });
+  }
+
+  // El PDF se saca por la impresión del navegador: en el móvil aparece como
+  // "Guardar en Archivos / PDF" y evita cargar otra librería pesada.
+  function exportarPdf(contenido, diapositivas, tema) {
+    var capa = document.createElement('div');
+    capa.id = 'print-slides';
+    capa.className = tema.id;
+    capa.innerHTML = diapositivas.map(function (d, i) {
+      return '<div class="print-page">' + htmlDiapositiva(d, i, diapositivas.length) + '</div>';
+    }).join('');
+
+    document.body.appendChild(capa);
+    document.body.classList.add('is-printing');
+
+    var limpiar = function () {
+      document.body.classList.remove('is-printing');
+      capa.remove();
+      window.removeEventListener('afterprint', limpiar);
+    };
+
+    window.addEventListener('afterprint', limpiar);
+    window.print();
+    // Safari en iOS no siempre lanza afterprint; se limpia igualmente.
+    window.setTimeout(limpiar, 60000);
+  }
+
+  function nombreArchivo(contenido) {
+    return String(contenido.title || 'presentacion')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-zA-Z0-9 ]/g, '')
+      .trim().replace(/\s+/g, '-')
+      .toLowerCase()
+      .slice(0, 60) || 'presentacion';
   }
 
   // ------------------------------------------------------------------------
@@ -233,20 +466,20 @@ Studdy.views.presentations = (function () {
 
   async function generarDesdeApunte(apunte) {
     if (!apunte) throw new Error('Ese apunte no existe o ya no está disponible.');
-    var respuesta = await Studdy.ai('presentation', { content: apunte.content });
+    var r = await Studdy.ai('presentation', { content: apunte.content });
     return guardar({
       note_id: apunte.id,
       topic: null,
-      content_json: { title: respuesta.title, slides: respuesta.slides },
+      content_json: { title: r.title, slides: r.slides },
     });
   }
 
   async function generarDesdeTema(tema) {
-    var respuesta = await Studdy.ai('presentation', { topic: tema });
+    var r = await Studdy.ai('presentation', { topic: tema });
     return guardar({
       note_id: null,
       topic: tema,
-      content_json: { title: respuesta.title, slides: respuesta.slides },
+      content_json: { title: r.title, slides: r.slides },
     });
   }
 
@@ -257,7 +490,6 @@ Studdy.views.presentations = (function () {
     if (!user) throw new Error('Tu sesión ha caducado. Vuelve a entrar.');
 
     fila.profile_id = user.id;
-
     var out = await client.from('presentations').insert(fila).select('id').single();
     if (out.error) throw new Error(out.error.message);
     return out.data.id;

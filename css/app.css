@@ -48,9 +48,9 @@ body.app {
   left: 0; right: 0; bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 2px;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
   background: rgba(255, 255, 255, .93);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--line);
@@ -61,7 +61,7 @@ body.app {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 4px 6px;
+  padding: 8px 2px 6px;
   border-radius: 14px;
   color: var(--ink-3);
   text-decoration: none;
@@ -1095,44 +1095,6 @@ body.app {
   flex: none;
   align-self: flex-end;
 }
-.chat__send:disabled { opacity: .4; cursor: not-allowed; }
-.chat__send svg { width: 18px; height: 18px; }
-
-/* --------------------------------------------------------------------------
-   Presentaciones
-   -------------------------------------------------------------------------- */
-
-.slide {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  box-shadow: var(--shadow-card);
-  min-height: 300px;
-  padding: 28px 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.slide::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 5px;
-  background: linear-gradient(to bottom, var(--green-500), var(--green-700));
-}
-
-.slide__title { font-size: 22px; margin-bottom: 18px; color: var(--green-900); }
-.slide__points { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
-.slide__points li { font-size: 15px; line-height: 1.5; }
-.slide__points li::marker { color: var(--green-500); }
-
-.slide--cover .slide__title { font-size: 27px; margin-bottom: 14px; }
-.slide--cover .slide__points { list-style: none; padding-left: 0; }
-.slide--cover .slide__points li { color: var(--ink-2); font-size: 16px; }
-
 .carousel__nav {
   display: flex;
   align-items: center;
@@ -1241,7 +1203,7 @@ body.app {
     left: 50%;
     transform: translateX(-50%);
     right: auto;
-    width: min(460px, calc(100% - 32px));
+    width: min(540px, calc(100% - 32px));
     bottom: 18px;
     border: 1px solid var(--line);
     border-radius: 22px;
@@ -1253,4 +1215,488 @@ body.app {
   .stats { grid-template-columns: repeat(4, 1fr); }
   .stat--wide { grid-column: span 2; }
   .hello__name { font-size: 32px; }
+}
+
+/* ==========================================================================
+   Presentaciones con diseño
+   ========================================================================== */
+
+/* Temas. Cada uno define fondo, tinta y acento; las maquetaciones son
+   las mismas para todos. */
+.th-esmeralda { --sl-bg:#0b3d2c; --sl-bg2:#0a5636; --sl-ink:#ffffff; --sl-soft:#a9e3c7; --sl-acc:#4ade80; }
+.th-papel     { --sl-bg:#faf8f3; --sl-bg2:#f2ede1; --sl-ink:#1d1a14; --sl-soft:#6b6355; --sl-acc:#0d7a4f; }
+.th-noche     { --sl-bg:#12151c; --sl-bg2:#1b202b; --sl-ink:#f2f5f8; --sl-soft:#98a4b8; --sl-acc:#6ba7ff; }
+.th-coral     { --sl-bg:#fff6f3; --sl-bg2:#ffe8e0; --sl-ink:#3d1d13; --sl-soft:#8a5a4a; --sl-acc:#e0603a; }
+
+.deck-frame { margin-bottom: 14px; }
+
+.slide {
+  position: relative;
+  /* El ancho lo manda el contenedor. Sin esto, `aspect-ratio` deducía el
+     ancho a partir de la altura del contenido y la diapositiva desbordaba
+     la pantalla en el móvil. */
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 28px 30px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(155deg, var(--sl-bg), var(--sl-bg2));
+  color: var(--sl-ink);
+  border: 1px solid rgba(0, 0, 0, .07);
+  box-shadow: var(--shadow-card);
+  container-type: inline-size;
+}
+
+/* Marca de agua geométrica, distinta según la maquetación */
+.slide::after {
+  content: "";
+  position: absolute;
+  right: -70px; bottom: -70px;
+  width: 210px; height: 210px;
+  border-radius: 50%;
+  background: var(--sl-acc);
+  opacity: .1;
+}
+
+.slide__eyebrow {
+  font-family: var(--font-display);
+  font-size: 2.6cqw;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--sl-acc);
+  margin-bottom: 2.2cqw;
+}
+
+.slide__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  font-size: 6cqw;
+  margin: 0 0 3cqw;
+  position: relative;
+  z-index: 1;
+}
+
+.slide__points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2.2cqw;
+  position: relative;
+  z-index: 1;
+}
+
+.slide__points li {
+  font-size: 3.5cqw;
+  line-height: 1.4;
+  padding-left: 4.4cqw;
+  position: relative;
+  color: var(--sl-ink);
+}
+
+.slide__points li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: .55em;
+  width: 2.2cqw; height: 2.2cqw;
+  border-radius: 50%;
+  background: var(--sl-acc);
+}
+
+/* Portada */
+.slide--portada { justify-content: center; }
+.slide--portada .slide__title { font-size: 8.4cqw; margin-bottom: 2.4cqw; }
+.slide--portada .slide__points li {
+  padding-left: 0;
+  font-size: 3.9cqw;
+  color: var(--sl-soft);
+}
+.slide--portada .slide__points li::before { display: none; }
+.slide--portada::after { width: 300px; height: 300px; right: -110px; bottom: -110px; }
+
+.slide--portada .slide__rule {
+  width: 14cqw; height: .9cqw;
+  background: var(--sl-acc);
+  border-radius: 999px;
+  margin-bottom: 3.4cqw;
+}
+
+/* Dos columnas */
+.slide--columnas .slide__points {
+  grid-template-columns: 1fr 1fr;
+  column-gap: 4cqw;
+}
+
+/* Idea destacada */
+.slide--destacado { justify-content: center; text-align: center; align-items: center; }
+.slide--destacado .slide__title { font-size: 5cqw; color: var(--sl-soft); font-weight: 500; }
+.slide--destacado .slide__points { gap: 0; }
+.slide--destacado .slide__points li {
+  padding-left: 0;
+  font-family: var(--font-display);
+  font-size: 6.4cqw;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.slide--destacado .slide__points li::before { display: none; }
+
+/* Cierre */
+.slide--cierre { justify-content: center; }
+.slide--cierre::after {
+  border-radius: 0;
+  width: 100%; height: 1.2cqw;
+  right: 0; bottom: 0;
+  background: var(--sl-acc);
+  opacity: 1;
+}
+
+/* Numeración */
+.slide__num {
+  position: absolute;
+  right: 26px; bottom: 20px;
+  font-family: var(--font-display);
+  font-size: 2.4cqw;
+  font-weight: 600;
+  color: var(--sl-soft);
+  opacity: .8;
+  z-index: 1;
+}
+
+/* Selector de tema */
+.theme-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+
+.theme-dot {
+  width: 34px; height: 34px;
+  border-radius: 11px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  background: linear-gradient(140deg, var(--sl-bg), var(--sl-bg2));
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.12);
+  position: relative;
+}
+.theme-dot.is-on { border-color: var(--green-600); }
+.theme-dot::after {
+  content: "";
+  position: absolute;
+  right: 5px; bottom: 5px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--sl-acc);
+}
+
+/* Tiras de miniaturas */
+.thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+}
+.thumbs::-webkit-scrollbar { display: none; }
+
+.thumb {
+  flex: none;
+  width: 74px;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: linear-gradient(150deg, var(--sl-bg), var(--sl-bg2));
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.thumb.is-on { border-color: var(--green-600); }
+.thumb span {
+  position: absolute;
+  left: 6px; top: 5px; right: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--sl-acc);
+  opacity: .85;
+}
+.thumb b {
+  position: absolute;
+  left: 6px; top: 13px; right: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sl-soft);
+  opacity: .5;
+}
+
+/* ==========================================================================
+   Agenda
+   ========================================================================== */
+
+.agenda-day { margin-bottom: 22px; }
+
+.agenda-day__label {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.agenda-day__label b { color: var(--danger); font-weight: 700; }
+
+.event {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 15px;
+  border-radius: 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--ev, var(--green-600));
+  margin-bottom: 9px;
+}
+
+.event--examen  { --ev: #b8482c; }
+.event--entrega { --ev: #1d6fd0; }
+.event--otro    { --ev: #6d8175; }
+.event.is-done { opacity: .5; }
+.event.is-done .event__title { text-decoration: line-through; }
+
+.event__body { flex: 1; min-width: 0; }
+
+.event__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15.5px;
+  line-height: 1.3;
+}
+
+.event__meta { font-size: 13px; color: var(--ink-3); margin-top: 3px; }
+
+.event__kind {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ev);
+}
+
+.event__check {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1.8px solid var(--line-2);
+  background: var(--paper);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+  color: transparent;
+}
+.event__check svg { width: 14px; height: 14px; }
+.event.is-done .event__check {
+  background: var(--green-600);
+  border-color: var(--green-600);
+  color: #fff;
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--ev, var(--green-600));
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+/* ==========================================================================
+   Repaso espaciado
+   ========================================================================== */
+
+.review-head {
+  padding: 20px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, var(--green-600), var(--green-800));
+  color: #fff;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.review-head__num {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.review-head__text { font-size: 14.5px; opacity: .9; line-height: 1.4; }
+
+.grade-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.grade {
+  padding: 13px 8px;
+  border-radius: 15px;
+  border: 1.5px solid var(--line-2);
+  background: var(--paper);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+}
+.grade span { font-size: 11px; font-weight: 500; color: var(--ink-3); }
+.grade--mal   { border-color: #e6bdb8; color: var(--danger); }
+.grade--medio { border-color: #e4cfa3; color: var(--amber); }
+.grade--bien  { border-color: var(--green-300); color: var(--green-700); }
+.grade:active { transform: scale(.96); }
+
+/* ==========================================================================
+   Herramientas: ejercicios y trabajos
+   ========================================================================== */
+
+.tool-grid { display: grid; gap: 11px; grid-template-columns: repeat(2, 1fr); }
+
+.tool-card {
+  padding: 18px 16px;
+  border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-height: 118px;
+}
+.tool-card:active { transform: scale(.97); }
+
+.tool-card__icon {
+  width: 40px; height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--sc-soft, var(--green-50));
+  color: var(--sc, var(--green-700));
+}
+.tool-card__icon svg { width: 20px; height: 20px; }
+
+.tool-card__title { font-family: var(--font-display); font-weight: 600; font-size: 15.5px; line-height: 1.25; }
+.tool-card__text { font-size: 12.5px; color: var(--ink-3); line-height: 1.4; }
+
+.photo-drop {
+  border: 1.5px dashed var(--line-2);
+  border-radius: 18px;
+  background: var(--paper);
+  padding: 24px 18px;
+  text-align: center;
+  cursor: pointer;
+}
+.photo-drop.is-over { border-color: var(--green-500); background: var(--green-50); }
+
+.photo-preview {
+  display: none;
+  margin-top: 12px;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.photo-preview.is-shown { display: block; }
+.photo-preview img { width: 100%; display: block; }
+
+.photo-preview__x {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(16, 34, 26, .72);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.photo-preview__x svg { width: 13px; height: 13px; }
+
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.seg button {
+  padding: 9px 6px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.seg button.is-on { background: var(--paper); color: var(--green-800); box-shadow: var(--shadow-card); }
+
+@media (min-width: 720px) {
+  .tool-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ==========================================================================
+   Impresión: exportar las diapositivas a PDF desde el propio navegador
+   ========================================================================== */
+
+#print-slides { display: none; }
+
+@media print {
+  body.is-printing > .shell,
+  body.is-printing > .boot { display: none !important; }
+
+  body.is-printing {
+    background: #fff;
+    margin: 0;
+  }
+
+  body.is-printing #print-slides { display: block; }
+
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+    padding: 0;
+    margin: 0;
+  }
+  .print-page:last-child { page-break-after: auto; break-after: auto; }
+
+  .print-page .slide {
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    /* Sin esto los navegadores quitan los fondos al imprimir */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page { size: landscape; margin: 0; }
 }

@@ -37,7 +37,7 @@ Studdy.views.profile = (function () {
 
       '<div class="block">' +
         '<div class="block__head"><h2 class="block__title">Herramientas</h2></div>' +
-        '<a class="btn btn--soft btn--block" href="#/apuntes/tema">' +
+        '<a class="btn btn--soft btn--block" href="#/tema">' +
           'Presentación de un tema suelto</a>' +
       '</div>' +
 

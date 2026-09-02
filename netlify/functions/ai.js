@@ -62,6 +62,10 @@ exports.handler = async (event) => {
         return await handlePresentation(apiKey, profile, payload);
       case 'chat':
         return await handleChat(apiKey, profile, payload);
+      case 'exercise':
+        return await handleExercise(apiKey, profile, payload);
+      case 'writing':
+        return await handleWriting(apiKey, profile, payload);
       default:
         return json(400, { error: 'Acción desconocida.' });
     }
@@ -399,11 +403,15 @@ async function handlePresentation(apiKey, profile, payload) {
   const system = [
     levelGuidance(profile),
     '',
-    `Tu tarea: crear el contenido de una presentación de ${count} diapositivas.`,
-    'La primera diapositiva es la portada: su título es el tema y sus puntos, una frase que sitúe de qué va.',
-    'Cada diapositiva siguiente tiene un título claro y entre 3 y 5 puntos clave.',
-    'Cada punto es una frase corta y autoexplicativa, no un párrafo.',
-    'La última diapositiva es un resumen o conclusión.',
+    `Tu tarea: crear el contenido de una presentación de ${count} diapositivas para exponer en clase.`,
+    'Cada diapositiva lleva un tipo de maquetación, y lo eliges tú según lo que toque contar:',
+    '- "portada": solo la primera. Título del tema y una frase que sitúe de qué va.',
+    '- "puntos": lo habitual. Título y entre 3 y 5 puntos clave.',
+    '- "columnas": para comparar dos cosas. Exactamente 4 o 6 puntos, que se leerán en dos columnas.',
+    '- "destacado": para una idea potente, un dato o una definición. Un solo punto, breve y contundente.',
+    '- "cierre": solo la última. Conclusión con 2 o 3 ideas para rematar.',
+    'Alterna las maquetaciones para que la presentación no sea monótona: usa al menos una "destacado" y, si el tema lo permite, una "columnas".',
+    'Cada punto es una frase corta y autoexplicativa, no un párrafo. Nada de textos largos: esto se proyecta.',
     source
       ? 'Básate únicamente en los apuntes proporcionados, sin inventar contenido.'
       : 'Desarrolla el tema con rigor y ajustado al nivel del estudiante.',
@@ -422,13 +430,18 @@ async function handlePresentation(apiKey, profile, payload) {
             type: 'object',
             properties: {
               title: { type: 'string', description: 'Título de la diapositiva.' },
+              layout: {
+                type: 'string',
+                enum: ['portada', 'puntos', 'columnas', 'destacado', 'cierre'],
+                description: 'Maquetación de la diapositiva.',
+              },
               points: {
                 type: 'array',
                 items: { type: 'string' },
                 description: 'Puntos clave de la diapositiva.',
               },
             },
-            required: ['title', 'points'],
+            required: ['title', 'layout', 'points'],
           },
         },
       },
@@ -506,6 +519,130 @@ async function handleChat(apiKey, profile, payload) {
   });
 
   return json(200, { reply: text });
+}
+
+// ---------------------------------------------------------------------------
+// Resolver un ejercicio paso a paso
+//
+// Acepta el enunciado escrito, una foto del ejercicio, o las dos cosas.
+// ---------------------------------------------------------------------------
+
+async function handleExercise(apiKey, profile, payload) {
+  const enunciado = payload.prompt ? String(payload.prompt).trim().slice(0, MAX_CHARS) : '';
+  const imagen = payload.image && payload.image.data && payload.image.media_type
+    ? payload.image
+    : null;
+
+  if (!enunciado && !imagen) {
+    throw new Error('Escribe el enunciado o adjunta una foto del ejercicio.');
+  }
+
+  const subject = payload.subject ? String(payload.subject).trim() : '';
+
+  const system = [
+    levelGuidance(profile),
+    '',
+    'Tu tarea: resolver el ejercicio paso a paso, como lo haría un buen profesor particular.',
+    'Reglas:',
+    '- Nunca sueltes solo el resultado. Lo importante es el camino.',
+    '- Empieza diciendo en una frase qué se pide y qué hace falta saber para resolverlo.',
+    '- Después, los pasos numerados. En cada uno explica QUÉ haces y POR QUÉ.',
+    '- Cierra con el resultado final claramente marcado y, si procede, una comprobación.',
+    '- Si el enunciado está incompleto o es ambiguo, dilo y resuelve la interpretación más razonable, avisando de cuál has tomado.',
+    '- Si la foto no se lee bien, dilo en lugar de inventarte el enunciado.',
+    'Formato: Markdown sencillo. Encabezados `## `, pasos con `1. `, y **negrita** en lo importante.',
+    'Nada de LaTeX: escribe las fórmulas en texto plano legible.',
+  ].join('\n');
+
+  const contenido = [];
+
+  if (imagen) {
+    contenido.push({
+      type: 'image',
+      source: { type: 'base64', media_type: imagen.media_type, data: imagen.data },
+    });
+  }
+
+  contenido.push({
+    type: 'text',
+    text: [
+      subject ? `Asignatura: ${subject}` : null,
+      enunciado ? `Enunciado:\n${enunciado}` : 'El ejercicio está en la imagen adjunta.',
+    ].filter(Boolean).join('\n'),
+  });
+
+  const text = await callClaude({
+    apiKey,
+    system,
+    maxTokens: 3000,
+    messages: [{ role: 'user', content: contenido }],
+  });
+
+  return json(200, { solution: text });
+}
+
+// ---------------------------------------------------------------------------
+// Trabajos y redacciones
+//
+// Tres modos: guion, borrador y revisión de lo ya escrito.
+// ---------------------------------------------------------------------------
+
+async function handleWriting(apiKey, profile, payload) {
+  const modo = ['guion', 'borrador', 'revision'].includes(payload.mode) ? payload.mode : 'guion';
+  const titulo = payload.title ? String(payload.title).trim() : '';
+  const requisitos = payload.requirements ? String(payload.requirements).trim().slice(0, 4000) : '';
+  const texto = payload.content ? String(payload.content).trim().slice(0, MAX_CHARS) : '';
+  const subject = payload.subject ? String(payload.subject).trim() : '';
+
+  if (!titulo && !texto) throw new Error('Dime al menos sobre qué va el trabajo.');
+  if (modo === 'revision' && !texto) throw new Error('No hay texto que revisar todavía.');
+
+  const instrucciones = {
+    guion: [
+      'Tu tarea: montar el guion del trabajo antes de escribirlo.',
+      'Devuelve la estructura por apartados, y bajo cada uno qué debe contar y en qué extensión aproximada.',
+      'Incluye al final qué buscar o comprobar antes de escribirlo.',
+      'No escribas el trabajo todavía: solo el esqueleto.',
+    ],
+    borrador: [
+      'Tu tarea: escribir un borrador completo del trabajo.',
+      'Debe sonar a un estudiante de su nivel, no a una enciclopedia: frases claras y vocabulario propio del curso.',
+      'Respeta la estructura habitual: introducción, desarrollo por apartados y conclusión.',
+      'Si te pasan un texto previo, tómalo como punto de partida y mejóralo, no lo tires.',
+      'Al final, en una sección aparte, di qué le falta al borrador y qué debería añadir el estudiante con sus propias palabras.',
+    ],
+    revision: [
+      'Tu tarea: revisar el texto que ha escrito el estudiante.',
+      'Devuelve tres bloques: "Lo que está bien", "Lo que hay que arreglar" (con ejemplos concretos del texto y cómo quedaría mejor) y "Cómo subir nota".',
+      'Corrige contenido, estructura, claridad y ortografía. Sé concreto: nada de consejos genéricos.',
+      'No reescribas el trabajo entero: el trabajo es suyo.',
+    ],
+  }[modo];
+
+  const system = [
+    levelGuidance(profile),
+    '',
+    ...instrucciones,
+    '',
+    'Formato: Markdown sencillo, con encabezados `## ` y listas `- `.',
+    'Recuérdale, solo si escribes un borrador, que debe repasarlo y hacerlo suyo antes de entregarlo.',
+  ].join('\n');
+
+  const userText = [
+    subject ? `Asignatura: ${subject}` : null,
+    titulo ? `Trabajo: ${titulo}` : null,
+    requisitos ? `Lo que pide el profesor:\n${requisitos}` : null,
+    texto ? `Texto actual:\n---\n${texto}\n---` : null,
+  ].filter(Boolean).join('\n\n');
+
+  const text = await callClaude({
+    apiKey,
+    system,
+    maxTokens: 4000,
+    messages: [{ role: 'user', content: userText }],
+  });
+
+  return json(200, { result: text });
 }
 
 // ---------------------------------------------------------------------------

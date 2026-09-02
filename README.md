@@ -52,12 +52,12 @@ anónimas se pueden convertir en permanentes sin perder los datos ya guardados.
 
 ## 2. Estructura
 
-La app es móvil primero: barra de navegación abajo (Inicio · Apuntes · Chat ·
-Perfil) y contenido en una sola columna.
+Móvil primero: barra de navegación abajo con cinco destinos —Inicio, Apuntes,
+Repasar, Chat y Perfil— y contenido en una sola columna.
 
-Cada apunte funciona como un **cuaderno**: al abrirlo tienes dentro su esquema,
-sus flashcards, su examen, su presentación y un chat sobre ese apunte concreto,
-en pestañas. El contenido se acumula alrededor del apunte en lugar de repartirse
+Cada apunte funciona como un **cuaderno**: dentro están su esquema, sus
+flashcards, su examen, su presentación y un chat sobre ese apunte concreto, en
+pestañas. El contenido se acumula alrededor del apunte en lugar de repartirse
 por secciones sueltas.
 
 ```
@@ -70,21 +70,26 @@ css/
   base.css            Tokens de diseño, reset y componentes comunes
   landing.css         Landing, incluido el objeto 3D del hero
   forms.css           Login y onboarding
-  app.css             Aplicación
+  app.css             Aplicación, diapositivas y hoja de impresión
 
 js/
   core.js             Config, sesión, llamadas a la IA y utilidades
   icons.js            Iconos compartidos
+  data/fp.js          Las 26 familias de FP y sus ciclos formativos
   login.js            Pantalla de acceso
   onboarding.js       Los 4 pasos y el guardado del perfil
   app.js              Estado, carga de datos y enrutador por hash
   views/
-    home.js           Inicio: accesos rápidos, continuar, progreso, asignaturas
+    home.js           Inicio: agenda, continuar, progreso y herramientas
     notes.js          Lista de apuntes con filtro, y subida
     notebook.js       El cuaderno: pestañas del apunte y esquema
-    flashcards.js     Generación y repaso de tarjetas
+    flashcards.js     Generación y repaso dentro de un apunte
     exams.js          Generación, respuesta, corrección y resultado
-    presentations.js  Desde un apunte o desde un tema suelto, con carrusel
+    presentations.js  Diapositivas con diseño y exportación
+    review.js         Repaso espaciado entre todos los apuntes
+    agenda.js         Exámenes, entregas y fechas
+    exercises.js      Ejercicios resueltos paso a paso, con foto
+    writing.js        Trabajos: guion, borrador y revisión
     chat.js           Chat general y chat sobre un apunte
     profile.js        Datos del perfil y cierre de sesión
 
@@ -93,8 +98,9 @@ netlify/functions/
   ai.js               Proxy hacia la API de Anthropic
 
 supabase/
-  schema.sql                  Tablas, RLS y políticas (instalación completa)
-  migracion-01-intentos.sql   Solo la tabla exam_attempts, para bases ya creadas
+  schema.sql                   Instalación completa
+  migracion-01-intentos.sql    Solo exam_attempts
+  migracion-02-funciones.sql   Agenda, repaso, ejercicios y trabajos
 netlify.toml          Publicación, redirecciones /api/* y cabeceras
 ```
 
@@ -128,6 +134,10 @@ Las salidas con estructura (flashcards, exámenes y presentaciones) se piden a
 Claude mediante herramientas con esquema JSON, de modo que el formato es
 siempre el esperado y no hay que analizar texto libre.
 
+Acciones disponibles en `/api/ai`: `summary`, `flashcards`, `exam`,
+`presentation`, `chat`, `exercise` (acepta una foto del ejercicio además del
+enunciado) y `writing` (guion, borrador o revisión de un trabajo).
+
 Modelo en uso: `claude-sonnet-5`. Se cambia en la constante `MODEL` de
 `netlify/functions/ai.js`.
 
@@ -145,13 +155,19 @@ Modelo en uso: `claude-sonnet-5`. Se cambia en la constante `MODEL` de
 | `exams` | Preguntas del examen, en `questions_json`. |
 | `presentations` | Diapositivas, en `content_json`. |
 | `exam_attempts` | Resultado de cada examen corregido. Alimenta el porcentaje de aciertos del Inicio. |
+| `events` | Exámenes, entregas y otras fechas de la agenda. |
+| `card_reviews` | Estado de repaso espaciado de cada flashcard. |
+| `exercises` | Ejercicios resueltos paso a paso. |
+| `documents` | Trabajos y redacciones. |
 
 Todas tienen RLS activado y políticas de `select`, `insert`, `update` y
 `delete` restringidas al propietario.
 
-**`exam_attempts` es opcional.** Si esa tabla todavía no existe, la app funciona
-igual: simplemente no muestra el porcentaje de aciertos. Para añadirla a una base
-ya creada, ejecuta `supabase/migracion-01-intentos.sql`.
+**Las tablas de las migraciones son opcionales.** Si no existen, la app funciona
+igual y solo se oculta lo que dependa de ellas: sin `exam_attempts` no hay
+porcentaje de aciertos, y sin las de la migración 02 no hay agenda, repaso
+espaciado, ejercicios ni trabajos. Para añadirlas a una base ya creada, ejecuta
+`supabase/migracion-01-intentos.sql` y `supabase/migracion-02-funciones.sql`.
 
 **Una nota sobre `presentations`:** además de `note_id` lleva `profile_id`, y
 `note_id` admite nulos. Es porque una presentación se puede generar escribiendo
