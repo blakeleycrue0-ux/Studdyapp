@@ -35,18 +35,30 @@ En **Supabase → SQL Editor → New query**, pega el contenido de
 [`supabase/schema.sql`](supabase/schema.sql) y ejecútalo. Crea las siete tablas,
 activa RLS en todas y añade las políticas.
 
-### c) Sesiones anónimas
+### c) Métodos de acceso
 
-En **Supabase → Authentication → Providers → Anonymous sign-ins**, actívalo.
+En **Supabase → Authentication → Providers**:
 
-Es lo que hace que el botón "Entrar" funcione. La pantalla de acceso no pide
-email ni contraseña, pero por detrás abre una sesión anónima de Supabase, y de
-ahí sale el `auth.uid()` real que necesitan las políticas RLS para que cada
-usuario solo pueda ver y editar sus propios datos. Sin esto, o no habría
-aislamiento entre usuarios, o las políticas bloquearían todas las operaciones.
+- **Email**: viene activado. Decide en sus opciones si exiges confirmar el
+  correo antes de entrar; la app contempla los dos casos.
+- **Google**: hay que darle un Client ID y un Client Secret. Se sacan de
+  Google Cloud Console → APIs y servicios → Credenciales → Crear ID de cliente
+  de OAuth → Aplicación web, poniendo como URI de redirección autorizada
+  `https://<tu-ref>.supabase.co/auth/v1/callback`.
 
-Cuando más adelante quieras login de verdad (email, Google…), las cuentas
-anónimas se pueden convertir en permanentes sin perder los datos ya guardados.
+Y en **Supabase → Authentication → URL Configuration**:
+
+- **Site URL**: la del sitio publicado, por ejemplo `https://studyapp15.netlify.app`
+- **Redirect URLs**: añade `https://studyapp15.netlify.app/login.html`
+
+Sin esa segunda parte, Google y los correos de recuperación te devolverían a
+`localhost` en lugar de a tu app.
+
+**Si vienes de la versión con botón único:** aquellas sesiones eran anónimas.
+La pantalla de acceso las detecta, avisa de que hay apuntes guardados en ese
+dispositivo y, al crear la cuenta, enlaza esa misma sesión en vez de abrir una
+nueva, así que no se pierde nada. Para poder enlazarla con Google hace falta
+activar **Manual linking** en Authentication → Settings.
 
 ---
 

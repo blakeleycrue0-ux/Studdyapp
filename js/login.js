@@ -1,27 +1,369 @@
-/* Pantalla de acceso.
-   Un único botón. No hay validación ni campos porque no habría nada que
-   validar: lo que hace es abrir la sesión anónima de Supabase (que es lo que
-   da un auth.uid() real para que funcione RLS) y pasar al onboarding. */
+/* ==========================================================================
+   Acceso: correo y contraseña, o Google.
+
+   Además convierte las cuentas anónimas antiguas: si en este dispositivo ya
+   hay una sesión sin cuenta con apuntes dentro, al registrarse se enlaza esa
+   misma sesión en lugar de crear una nueva, así no se pierde nada.
+   ========================================================================== */
 
 (function () {
   'use strict';
 
-  var boton = Studdy.$('#entrar');
-  var error = Studdy.$('#error');
+  var panel = Studdy.$('#panel');
+  var modo = 'entrar';          // entrar | crear | olvidada | nueva
+  var anonimo = null;           // sesión anónima previa con datos, si la hay
 
-  boton.addEventListener('click', function () {
-    error.innerHTML = '';
-    boton.disabled = true;
-    boton.innerHTML = '<span class="spinner"></span> Entrando…';
+  var ICONO_GOOGLE =
+    '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.8-.1-1.4-.2-2.1H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-1.9 3.2-4.8 3.2-7.8Z"/>' +
+    '<path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.6-2.7c-1 .7-2.2 1.1-3.6 1.1-2.8 0-5.2-1.9-6-4.4H2.3v2.8A10.9 10.9 0 0 0 12 23Z"/>' +
+    '<path fill="#FBBC05" d="M6 14.4a6.5 6.5 0 0 1 0-4.2V7.4H2.3a11 11 0 0 0 0 9.8L6 14.4Z"/>' +
+    '<path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1A10.9 10.9 0 0 0 2.3 7.4L6 10.2c.9-2.6 3.2-4.4 6-4.4Z"/></svg>';
 
-    Studdy.signIn()
-      .then(function () {
-        window.location.href = 'onboarding.html';
+  var ICONO_OJO =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/>' +
+    '<circle cx="12" cy="12" r="2.8"/></svg>';
+
+  var ICONO_OJO_OFF =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/>' +
+    '<path d="M10.6 6.1A9.9 9.9 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4"/>' +
+    '<path d="M6.3 8A16.6 16.6 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/>' +
+    '<path d="M9.5 10.4a2.8 2.8 0 0 0 4 3.9"/></svg>';
+
+  var ICONO_INFO =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/>' +
+    '<path d="M12 11v5M12 7.8h.01"/></svg>';
+
+  // ------------------------------------------------------------------------
+  // Arranque
+  // ------------------------------------------------------------------------
+
+  arrancar();
+
+  function arrancar() {
+    // Al volver de Google o del correo de recuperación, la sesión llega en la
+    // URL y supabase-js ya la ha recogido.
+    var esRecuperacion = /type=recovery/.test(window.location.hash || '') ||
+      /type=recovery/.test(window.location.search || '');
+
+    Studdy.getSession()
+      .then(function (sesion) {
+        return Studdy.currentUser().then(function (usuario) {
+          return { sesion: sesion, usuario: usuario };
+        });
+      })
+      .then(function (estado) {
+        Studdy.$('#boot').remove();
+
+        if (esRecuperacion && estado.sesion) {
+          modo = 'nueva';
+          pintar();
+          return;
+        }
+
+        // Sesión completa: adentro.
+        if (estado.sesion && estado.usuario && !estado.usuario.is_anonymous) {
+          seguir();
+          return;
+        }
+
+        // Sesión anónima de la versión anterior: se ofrece conservarla.
+        if (estado.sesion && estado.usuario && estado.usuario.is_anonymous) {
+          return Studdy.getProfile().then(function (perfil) {
+            if (perfil) {
+              anonimo = perfil;
+              modo = 'crear';
+            }
+            pintar();
+          });
+        }
+
+        pintar();
       })
       .catch(function (err) {
-        error.innerHTML = Studdy.errorHtml(err.message);
-        boton.disabled = false;
-        boton.textContent = 'Entrar';
+        var boot = Studdy.$('#boot');
+        if (boot) boot.remove();
+        pintar();
+        error(err.message);
       });
-  });
+  }
+
+  function seguir() {
+    Studdy.getProfile()
+      .then(function (perfil) {
+        window.location.replace(perfil ? 'app.html' : 'onboarding.html');
+      })
+      .catch(function () { window.location.replace('onboarding.html'); });
+  }
+
+  // ------------------------------------------------------------------------
+  // Pintado
+  // ------------------------------------------------------------------------
+
+  function pintar() {
+    if (modo === 'olvidada') return pintarOlvidada();
+    if (modo === 'nueva') return pintarNueva();
+
+    var creando = modo === 'crear';
+
+    panel.innerHTML =
+      '<h1 class="panel__title">' + (creando ? 'Crea tu cuenta' : 'Entra en Studdy') + '</h1>' +
+      '<p class="panel__lead">' +
+        (creando
+          ? 'Para que tus apuntes te sigan en cualquier dispositivo.'
+          : 'Con tu correo o con Google.') +
+      '</p>' +
+
+      '<div class="auth-seg" id="seg">' +
+        '<button type="button" data-modo="entrar"' + (creando ? '' : ' class="is-on"') + '>Entrar</button>' +
+        '<button type="button" data-modo="crear"' + (creando ? ' class="is-on"' : '') + '>Crear cuenta</button>' +
+      '</div>' +
+
+      (anonimo
+        ? '<div class="banner">' + ICONO_INFO +
+            '<span><b>Tienes apuntes guardados aquí</b>' +
+            'Los de ' + Studdy.escapeHtml(anonimo.name) + '. Crea tu cuenta y se quedan contigo; ' +
+            'si entras con otra, se quedan atrás.</span>' +
+          '</div>'
+        : '') +
+
+      '<div class="panel__error" id="error"></div>' +
+
+      '<div class="auth-fields">' +
+        '<label class="field">' +
+          '<span class="field__label">Correo electrónico</span>' +
+          '<input class="input" type="email" id="email" autocomplete="email" ' +
+            'inputmode="email" spellcheck="false">' +
+        '</label>' +
+        '<label class="field">' +
+          '<span class="field__label">Contraseña</span>' +
+          '<span class="pw">' +
+            '<input class="input" type="password" id="password" ' +
+              'autocomplete="' + (creando ? 'new-password' : 'current-password') + '">' +
+            '<button class="pw__eye" type="button" id="ojo" aria-label="Mostrar contraseña">' +
+              ICONO_OJO + '</button>' +
+          '</span>' +
+        '</label>' +
+      '</div>' +
+
+      '<button class="btn btn--primary btn--lg btn--block" id="enviar" disabled>' +
+        (creando ? (anonimo ? 'Crear cuenta y conservar mis apuntes' : 'Crear cuenta') : 'Entrar') +
+      '</button>' +
+
+      '<div class="auth-divider">o</div>' +
+
+      '<button class="btn btn--google btn--lg btn--block" id="google">' +
+        ICONO_GOOGLE + 'Continuar con Google</button>' +
+
+      (creando
+        ? '<p class="auth-note">Con al menos 8 caracteres. Te enviaremos un correo ' +
+          'para confirmar que la dirección es tuya.</p>'
+        : '<div class="auth-links">' +
+            '<button class="auth-link" data-ir="olvidada">He olvidado la contraseña</button>' +
+          '</div>');
+
+    conectar(creando);
+  }
+
+  function conectar(creando) {
+    var email = Studdy.$('#email', panel);
+    var pass = Studdy.$('#password', panel);
+    var enviar = Studdy.$('#enviar', panel);
+
+    function revisar() {
+      enviar.disabled = !(valido(email.value) && pass.value.length >= (creando ? 8 : 1));
+    }
+
+    email.addEventListener('input', revisar);
+    pass.addEventListener('input', revisar);
+
+    pass.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !enviar.disabled) enviar.click();
+    });
+
+    Studdy.$('#ojo', panel).addEventListener('click', function () {
+      var visible = pass.type === 'text';
+      pass.type = visible ? 'password' : 'text';
+      this.innerHTML = visible ? ICONO_OJO : ICONO_OJO_OFF;
+      this.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    });
+
+    Studdy.$('#seg', panel).addEventListener('click', function (e) {
+      var b = e.target.closest('[data-modo]');
+      if (!b) return;
+      modo = b.dataset.modo;
+      pintar();
+    });
+
+    var olvidada = Studdy.$('[data-ir="olvidada"]', panel);
+    if (olvidada) {
+      olvidada.addEventListener('click', function () { modo = 'olvidada'; pintar(); });
+    }
+
+    enviar.addEventListener('click', function () {
+      ocupado(enviar, creando ? 'Creando…' : 'Entrando…');
+      error('');
+
+      var tarea = creando
+        ? (anonimo
+            ? Studdy.upgradeAnonymous(email.value.trim(), pass.value)
+            : Studdy.signUp(email.value.trim(), pass.value))
+        : Studdy.signInWithPassword(email.value.trim(), pass.value);
+
+      tarea
+        .then(function (r) {
+          if (r && r.necesitaConfirmar) {
+            confirmacion(email.value.trim());
+            return;
+          }
+          seguir();
+        })
+        .catch(function (err) {
+          error(err.message);
+          libre(enviar, creando ? (anonimo ? 'Crear cuenta y conservar mis apuntes' : 'Crear cuenta') : 'Entrar');
+        });
+    });
+
+    Studdy.$('#google', panel).addEventListener('click', function () {
+      ocupado(this, 'Abriendo Google…');
+      error('');
+
+      // Con datos anónimos por conservar se enlaza la cuenta en vez de entrar
+      // como si fuese alguien nuevo.
+      var tarea = anonimo ? Studdy.linkGoogle() : Studdy.signInWithGoogle();
+
+      tarea.catch(function (err) {
+        error(err.message);
+        libre(Studdy.$('#google', panel), 'Continuar con Google');
+        Studdy.$('#google', panel).insertAdjacentHTML('afterbegin', ICONO_GOOGLE);
+      });
+    });
+
+    email.focus();
+  }
+
+  // ------------------------------------------------------------------------
+
+  function pintarOlvidada() {
+    panel.innerHTML =
+      '<h1 class="panel__title">Recuperar contraseña</h1>' +
+      '<p class="panel__lead">Te mandamos un enlace para poner una nueva.</p>' +
+      '<div class="panel__error" id="error"></div>' +
+      '<div class="auth-fields">' +
+        '<label class="field">' +
+          '<span class="field__label">Correo electrónico</span>' +
+          '<input class="input" type="email" id="email" autocomplete="email" ' +
+            'inputmode="email" spellcheck="false">' +
+        '</label>' +
+      '</div>' +
+      '<button class="btn btn--primary btn--lg btn--block" id="enviar" disabled>Enviar enlace</button>' +
+      '<div class="auth-links">' +
+        '<button class="auth-link" data-ir="entrar">Volver</button>' +
+      '</div>';
+
+    var email = Studdy.$('#email', panel);
+    var enviar = Studdy.$('#enviar', panel);
+
+    email.addEventListener('input', function () { enviar.disabled = !valido(email.value); });
+    Studdy.$('[data-ir="entrar"]', panel).addEventListener('click', function () {
+      modo = 'entrar'; pintar();
+    });
+
+    enviar.addEventListener('click', function () {
+      ocupado(enviar, 'Enviando…');
+      error('');
+
+      Studdy.resetPassword(email.value.trim())
+        .then(function () {
+          panel.innerHTML =
+            '<h1 class="panel__title">Mira tu correo</h1>' +
+            '<p class="panel__lead">Si hay una cuenta con <b>' +
+              Studdy.escapeHtml(email.value.trim()) + '</b>, te acaba de llegar un enlace ' +
+              'para poner una contraseña nueva.</p>' +
+            '<a class="btn btn--ghost btn--block" href="login.html">Volver</a>';
+        })
+        .catch(function (err) {
+          error(err.message);
+          libre(enviar, 'Enviar enlace');
+        });
+    });
+
+    email.focus();
+  }
+
+  function pintarNueva() {
+    panel.innerHTML =
+      '<h1 class="panel__title">Nueva contraseña</h1>' +
+      '<p class="panel__lead">Escribe la que quieras usar a partir de ahora.</p>' +
+      '<div class="panel__error" id="error"></div>' +
+      '<div class="auth-fields">' +
+        '<label class="field">' +
+          '<span class="field__label">Contraseña</span>' +
+          '<span class="pw">' +
+            '<input class="input" type="password" id="password" autocomplete="new-password">' +
+            '<button class="pw__eye" type="button" id="ojo" aria-label="Mostrar contraseña">' +
+              ICONO_OJO + '</button>' +
+          '</span>' +
+        '</label>' +
+      '</div>' +
+      '<button class="btn btn--primary btn--lg btn--block" id="enviar" disabled>Guardar</button>' +
+      '<p class="auth-note">Al menos 8 caracteres.</p>';
+
+    var pass = Studdy.$('#password', panel);
+    var enviar = Studdy.$('#enviar', panel);
+
+    pass.addEventListener('input', function () { enviar.disabled = pass.value.length < 8; });
+
+    Studdy.$('#ojo', panel).addEventListener('click', function () {
+      var visible = pass.type === 'text';
+      pass.type = visible ? 'password' : 'text';
+      this.innerHTML = visible ? ICONO_OJO : ICONO_OJO_OFF;
+    });
+
+    enviar.addEventListener('click', function () {
+      ocupado(enviar, 'Guardando…');
+      error('');
+
+      Studdy.updatePassword(pass.value)
+        .then(seguir)
+        .catch(function (err) {
+          error(err.message);
+          libre(enviar, 'Guardar');
+        });
+    });
+
+    pass.focus();
+  }
+
+  function confirmacion(correo) {
+    panel.innerHTML =
+      '<h1 class="panel__title">Confirma tu correo</h1>' +
+      '<p class="panel__lead">Te hemos enviado un enlace a <b>' +
+        Studdy.escapeHtml(correo) + '</b>. Ábrelo y ya estarás dentro.</p>' +
+      '<p class="auth-note">Si no aparece, mira en spam.</p>' +
+      '<a class="btn btn--ghost btn--block" style="margin-top:18px" href="login.html">Volver</a>';
+  }
+
+  // ------------------------------------------------------------------------
+
+  function valido(correo) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(correo || '').trim());
+  }
+
+  function ocupado(boton, texto) {
+    boton.disabled = true;
+    boton.innerHTML = '<span class="spinner"></span> ' + texto;
+  }
+
+  function libre(boton, texto) {
+    boton.disabled = false;
+    boton.textContent = texto;
+  }
+
+  function error(mensaje) {
+    var caja = Studdy.$('#error', panel);
+    if (caja) caja.innerHTML = mensaje ? Studdy.errorHtml(mensaje) : '';
+  }
 })();

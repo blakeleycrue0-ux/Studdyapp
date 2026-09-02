@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Entrar — Studdy</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -13,6 +13,10 @@
 <link rel="stylesheet" href="css/forms.css">
 </head>
 <body class="screen">
+
+<div class="boot" id="boot">
+  <div class="boot__inner"><span class="spinner"></span><span>Cargando…</span></div>
+</div>
 
 <header class="screen__header">
   <div class="wrap">
@@ -30,29 +34,7 @@
 
 <main class="screen__main">
   <div class="wrap" style="display:flex;justify-content:center">
-    <div class="panel login-panel">
-
-      <div class="login-panel__mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 9 12 4 2 9l10 5 10-5Z"/>
-          <path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/>
-          <path d="M22 9v5"/>
-        </svg>
-      </div>
-
-      <h1 class="panel__title">Entra en Studdy</h1>
-      <p class="panel__lead">
-        En el siguiente paso te preguntamos qué estás estudiando, para ajustar
-        todo lo que la IA genere a tu curso.
-      </p>
-
-      <div class="panel__error" id="error"></div>
-
-      <button class="btn btn--primary btn--lg btn--block" id="entrar" type="button">
-        Entrar
-      </button>
-
-    </div>
+    <div class="panel auth-panel" id="panel"></div>
   </div>
 </main>
 

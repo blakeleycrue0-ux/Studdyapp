@@ -9,6 +9,16 @@ Studdy.views.profile = (function () {
     var app = Studdy.app;
     var p = app.state.profile;
 
+    pintar(vista, app, p, null);
+
+    // El correo y el proveedor se piden aparte para no retrasar el pintado.
+    Studdy.currentUser().then(function (usuario) {
+      if (usuario) pintar(vista, app, p, usuario);
+    });
+  }
+
+  function pintar(vista, app, p, usuario) {
+
     vista.innerHTML =
       '<div class="profile-hero">' +
         '<div class="profile-hero__avatar">' + Studdy.escapeHtml(app.initials(p.name)) + '</div>' +
@@ -17,7 +27,12 @@ Studdy.views.profile = (function () {
       '</div>' +
 
       '<div class="block">' +
-        '<div class="block__head"><h2 class="block__title">Tus datos</h2></div>' +
+        '<div class="block__head"><h2 class="block__title">Tu cuenta</h2></div>' +
+        filasCuenta(usuario).join('') +
+      '</div>' +
+
+      '<div class="block">' +
+        '<div class="block__head"><h2 class="block__title">Tus estudios</h2></div>' +
         filas(p).join('') +
       '</div>' +
 
@@ -49,6 +64,32 @@ Studdy.views.profile = (function () {
     });
   }
 
+  function filasCuenta(usuario) {
+    if (!usuario) return [fila('Cargando…', '')];
+
+    var proveedores = (usuario.identities || [])
+      .map(function (i) { return i.provider; })
+      .filter(function (v, i, a) { return a.indexOf(v) === i; });
+
+    var comoEntras = proveedores.length
+      ? proveedores.map(function (x) {
+          return x === 'google' ? 'Google' : x === 'email' ? 'Correo y contraseña' : x;
+        }).join(' y ')
+      : (usuario.is_anonymous ? 'Sin cuenta (solo este dispositivo)' : '—');
+
+    return [
+      fila('Correo', usuario.email || '—'),
+      fila('Entras con', comoEntras),
+    ];
+  }
+
+  function fila(clave, valor) {
+    return '<div class="data-row">' +
+      '<span class="data-row__key">' + Studdy.escapeHtml(clave) + '</span>' +
+      '<span class="data-row__val">' + Studdy.escapeHtml(valor) + '</span>' +
+      '</div>';
+  }
+
   function filas(p) {
     var datos = [['Nivel', p.level]];
 
@@ -68,12 +109,7 @@ Studdy.views.profile = (function () {
 
     return datos
       .filter(function (d) { return d[1]; })
-      .map(function (d) {
-        return '<div class="data-row">' +
-          '<span class="data-row__key">' + Studdy.escapeHtml(d[0]) + '</span>' +
-          '<span class="data-row__val">' + Studdy.escapeHtml(d[1]) + '</span>' +
-          '</div>';
-      });
+      .map(function (d) { return fila(d[0], d[1]); });
   }
 
   return { render: render };

@@ -54,27 +54,131 @@ window.Studdy = (function () {
       .then(function (res) { return res.data ? res.data.session : null; });
   }
 
-  // Crea la sesión anónima solo si todavía no hay ninguna. Es lo que hace que
-  // exista un auth.uid() real y, por tanto, que las políticas RLS puedan
-  // aislar los datos de cada usuario.
-  function signIn() {
-    return getClient().then(function (client) {
-      return client.auth.getSession().then(function (res) {
-        if (res.data && res.data.session) return res.data.session;
-        return client.auth.signInAnonymously().then(function (out) {
-          if (out.error) throw new Error(traducirErrorAuth(out.error.message));
-          return out.data.session;
+  // ------------------------------------------------------------------------
+  // Autenticación
+  // ------------------------------------------------------------------------
+
+  function signInWithPassword(email, password) {
+    return getClient()
+      .then(function (client) {
+        return client.auth.signInWithPassword({ email: email, password: password });
+      })
+      .then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+        return out.data.session;
+      });
+  }
+
+  function signUp(email, password) {
+    return getClient()
+      .then(function (client) {
+        return client.auth.signUp({
+          email: email,
+          password: password,
+          options: { emailRedirectTo: urlDeVuelta() },
         });
+      })
+      .then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+        // Sin sesión de vuelta significa que Supabase pide confirmar el correo.
+        return { session: out.data.session, necesitaConfirmar: !out.data.session };
+      });
+  }
+
+  // Convierte la sesión anónima actual en una cuenta de verdad, conservando
+  // todo lo que ya hay guardado: el auth.uid() no cambia, así que los apuntes
+  // siguen siendo suyos.
+  function upgradeAnonymous(email, password) {
+    return getClient()
+      .then(function (client) {
+        return client.auth.updateUser({ email: email, password: password });
+      })
+      .then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+        return { necesitaConfirmar: !!(out.data.user && !out.data.user.email_confirmed_at) };
+      });
+  }
+
+  function signInWithGoogle() {
+    return getClient().then(function (client) {
+      return client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: urlDeVuelta() },
+      }).then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+        return out;
       });
     });
   }
 
+  // Enlaza Google a la cuenta anónima actual, para no perder lo guardado.
+  function linkGoogle() {
+    return getClient().then(function (client) {
+      if (!client.auth.linkIdentity) {
+        throw new Error('Tu versión de Supabase no permite enlazar cuentas.');
+      }
+      return client.auth.linkIdentity({
+        provider: 'google',
+        options: { redirectTo: urlDeVuelta() },
+      }).then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+        return out;
+      });
+    });
+  }
+
+  function resetPassword(email) {
+    return getClient()
+      .then(function (client) {
+        return client.auth.resetPasswordForEmail(email, { redirectTo: urlDeVuelta() });
+      })
+      .then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+      });
+  }
+
+  function updatePassword(password) {
+    return getClient()
+      .then(function (client) { return client.auth.updateUser({ password: password }); })
+      .then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+      });
+  }
+
+  function urlDeVuelta() {
+    return window.location.origin + '/login.html';
+  }
+
+  // ¿La sesión actual es una de las anónimas antiguas, con datos dentro?
+  function currentUser() {
+    return getClient()
+      .then(function (client) { return client.auth.getUser(); })
+      .then(function (res) { return res.data ? res.data.user : null; })
+      .catch(function () { return null; });
+  }
+
+  var ERRORES = [
+    [/invalid login credentials/i, 'Correo o contraseña incorrectos.'],
+    [/email not confirmed/i, 'Todavía no has confirmado tu correo. Mira tu bandeja de entrada.'],
+    [/user already registered|already been registered/i,
+      'Ya existe una cuenta con ese correo. Entra en lugar de crear una nueva.'],
+    [/password should be at least (\d+)/i, 'La contraseña es demasiado corta.'],
+    [/unable to validate email|invalid email/i, 'Ese correo no parece válido.'],
+    [/provider is not enabled|Unsupported provider/i,
+      'El acceso con Google no está activado en Supabase. Actívalo en Authentication → Providers → Google.'],
+    [/anonymous/i,
+      'Las sesiones anónimas no están activadas en Supabase. Actívalas en Authentication → Providers.'],
+    [/rate limit|too many/i, 'Demasiados intentos seguidos. Espera un momento y vuelve a probar.'],
+    [/manual linking|identity_already_exists/i,
+      'Ese Google ya está enlazado a otra cuenta, o falta activar el enlace manual en Supabase.'],
+  ];
+
   function traducirErrorAuth(mensaje) {
-    if (/anonymous/i.test(mensaje || '')) {
-      return 'Las sesiones anónimas no están activadas en Supabase. ' +
-        'Actívalas en Authentication → Providers → Anonymous sign-ins.';
+    var texto = mensaje || '';
+    for (var i = 0; i < ERRORES.length; i++) {
+      if (ERRORES[i][0].test(texto)) return ERRORES[i][1];
     }
-    return mensaje || 'No se ha podido iniciar sesión.';
+    return texto || 'No se ha podido iniciar sesión.';
   }
 
   function signOut() {
@@ -255,7 +359,14 @@ window.Studdy = (function () {
     getClient: getClient,
     getSession: getSession,
     requireSession: requireSession,
-    signIn: signIn,
+    signInWithPassword: signInWithPassword,
+    signUp: signUp,
+    upgradeAnonymous: upgradeAnonymous,
+    signInWithGoogle: signInWithGoogle,
+    linkGoogle: linkGoogle,
+    resetPassword: resetPassword,
+    updatePassword: updatePassword,
+    currentUser: currentUser,
     signOut: signOut,
     getProfile: getProfile,
     ai: ai,
