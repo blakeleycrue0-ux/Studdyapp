@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Studdy — Estudia con una IA que sabe en qué curso estás</title>
 <meta name="description" content="Sube tus apuntes y obtén esquemas, flashcards, exámenes y presentaciones escritos para tu nivel exacto, de 1º de la ESO a la universidad.">
+<script>
+// Si Supabase devuelve aquí la vuelta de Google —porque el Site URL apunta a
+// la raíz del sitio— se reenvía a la pantalla de acceso con lo que traiga.
+// Sin esto, la sesión se perdería en la landing, que no sabe qué hacer con ella.
+(function () {
+  var h = window.location.hash || '';
+  var q = window.location.search || '';
+  if (/[#&?](access_token|refresh_token|code|error|error_description)=/.test(h + q)) {
+    window.location.replace('login.html' + q + h);
+  }
+})();
+</script>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

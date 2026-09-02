@@ -40,15 +40,68 @@
   // Arranque
   // ------------------------------------------------------------------------
 
-  arrancar();
+  var MARCA_GOOGLE = 'studdy:volviendo-de-google';
+
+  // Lee los parámetros que Supabase deja al volver, vengan en el hash
+  // (?#access_token=…) o en la query (?code=…).
+  function paramsDeVuelta() {
+    var hash = (window.location.hash || '').replace(/^#/, '');
+    var query = (window.location.search || '').replace(/^\?/, '');
+    var p = {};
+
+    [hash, query].forEach(function (trozo) {
+      if (!trozo) return;
+      trozo.split('&').forEach(function (par) {
+        var i = par.indexOf('=');
+        if (i < 0) return;
+        p[decodeURIComponent(par.slice(0, i))] = decodeURIComponent(par.slice(i + 1).replace(/\+/g, ' '));
+      });
+    });
+
+    return p;
+  }
+
+  // Deja la barra de direcciones limpia una vez recogido lo que traía.
+  function limpiarUrl() {
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }
+
+  function marcar(valor) {
+    try {
+      if (valor) sessionStorage.setItem(MARCA_GOOGLE, '1');
+      else sessionStorage.removeItem(MARCA_GOOGLE);
+    } catch (e) { /* modo privado */ }
+  }
+
+  function veniaDeGoogle() {
+    try { return sessionStorage.getItem(MARCA_GOOGLE) === '1'; } catch (e) { return false; }
+  }
 
   function arrancar() {
-    // Al volver de Google o del correo de recuperación, la sesión llega en la
-    // URL y supabase-js ya la ha recogido.
-    var esRecuperacion = /type=recovery/.test(window.location.hash || '') ||
-      /type=recovery/.test(window.location.search || '');
+    var params = paramsDeVuelta();
+    var esRecuperacion = params.type === 'recovery';
 
-    Studdy.getSession()
+    // Si Google o Supabase devuelven un error, se dice; antes esto dejaba la
+    // pantalla de acceso como si no hubiera pasado nada.
+    if (params.error || params.error_description) {
+      var boot0 = Studdy.$('#boot');
+      if (boot0) boot0.remove();
+      marcar(false);
+      limpiarUrl();
+      pintar();
+      error(traducirOAuth(params.error, params.error_description));
+      return;
+    }
+
+    // Si hay un código de OAuth, se canjea antes de decidir nada.
+    var previo = (params.code && !params.access_token)
+      ? Studdy.exchangeCode(params.code).catch(function () { return null; })
+      : Promise.resolve(null);
+
+    previo
+      .then(function () { return Studdy.getSession(); })
       .then(function (sesion) {
         return Studdy.currentUser().then(function (usuario) {
           return { sesion: sesion, usuario: usuario };
@@ -80,14 +133,50 @@
           });
         }
 
+        // Se ha vuelto de Google pero no hay sesión ni nada en la URL: casi
+        // siempre significa que la dirección de vuelta no está permitida en
+        // Supabase, así que se dice en lugar de dejar la pantalla muda.
+        var mudo = veniaDeGoogle();
+        marcar(false);
+        limpiarUrl();
         pintar();
+
+        if (mudo) {
+          error('Google te ha identificado, pero Supabase no ha devuelto la sesión a esta ' +
+            'página. Revisa Authentication → URL Configuration: el Site URL debe ser ' +
+            window.location.origin + ' y en Redirect URLs tiene que estar ' +
+            window.location.origin + '/**');
+        }
       })
       .catch(function (err) {
         var boot = Studdy.$('#boot');
         if (boot) boot.remove();
+        marcar(false);
         pintar();
         error(err.message);
       });
+  }
+
+  var ERRORES_OAUTH = [
+    [/access_denied/i, 'Has cancelado el acceso con Google.'],
+    [/redirect_uri_mismatch/i,
+      'La dirección de vuelta no coincide con la que hay en Google Cloud. ' +
+      'En Authorised redirect URIs debe estar la de Supabase, terminada en /auth/v1/callback.'],
+    [/admin|policy|blocked|disallowed_useragent/i,
+      'Google ha bloqueado el acceso. Si estás usando la cuenta del instituto, ' +
+      'puede que su administrador no permita aplicaciones externas.'],
+    [/bad_oauth_state|invalid_request|flow_state/i,
+      'La vuelta de Google ha caducado o se ha abierto en otra pestaña. Inténtalo otra vez.'],
+    [/provider is not enabled/i,
+      'El acceso con Google no está activado en Supabase.'],
+  ];
+
+  function traducirOAuth(codigo, descripcion) {
+    var texto = (codigo || '') + ' ' + (descripcion || '');
+    for (var i = 0; i < ERRORES_OAUTH.length; i++) {
+      if (ERRORES_OAUTH[i][0].test(texto)) return ERRORES_OAUTH[i][1];
+    }
+    return descripcion || codigo || 'No se ha podido completar el acceso con Google.';
   }
 
   function seguir() {
@@ -232,9 +321,11 @@
 
       // Con datos anónimos por conservar se enlaza la cuenta en vez de entrar
       // como si fuese alguien nuevo.
+      marcar(true);
       var tarea = anonimo ? Studdy.linkGoogle() : Studdy.signInWithGoogle();
 
       tarea.catch(function (err) {
+        marcar(false);
         error(err.message);
         libre(Studdy.$('#google', panel), 'Continuar con Google');
         Studdy.$('#google', panel).insertAdjacentHTML('afterbegin', ICONO_GOOGLE);
@@ -366,4 +457,8 @@
     var caja = Studdy.$('#error', panel);
     if (caja) caja.innerHTML = mensaje ? Studdy.errorHtml(mensaje) : '';
   }
+
+  // Se arranca al final, cuando ya están definidas las tablas de errores que
+  // usa el camino de vuelta de Google.
+  arrancar();
 })();

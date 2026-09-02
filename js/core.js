@@ -33,7 +33,13 @@ window.Studdy = (function () {
           throw new Error('No se ha podido cargar la librería de Supabase.');
         }
         return window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
-          auth: { persistSession: true, autoRefreshToken: true },
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            // Al volver de Google la sesión llega en la URL; que la recoja sola.
+            detectSessionInUrl: true,
+            flowType: 'pkce',
+          },
         });
       })
       .catch(function (err) {
@@ -125,6 +131,22 @@ window.Studdy = (function () {
         return out;
       });
     });
+  }
+
+  // Red de seguridad: si por lo que sea supabase-js no ha canjeado el código
+  // de la URL, se hace a mano.
+  function exchangeCode(code) {
+    return getClient()
+      .then(function (client) {
+        if (!client.auth.exchangeCodeForSession) {
+          throw new Error('Tu versión de Supabase no permite canjear el código.');
+        }
+        return client.auth.exchangeCodeForSession(code);
+      })
+      .then(function (out) {
+        if (out.error) throw new Error(traducirErrorAuth(out.error.message));
+        return out.data.session;
+      });
   }
 
   function resetPassword(email) {
@@ -364,6 +386,7 @@ window.Studdy = (function () {
     upgradeAnonymous: upgradeAnonymous,
     signInWithGoogle: signInWithGoogle,
     linkGoogle: linkGoogle,
+    exchangeCode: exchangeCode,
     resetPassword: resetPassword,
     updatePassword: updatePassword,
     currentUser: currentUser,
