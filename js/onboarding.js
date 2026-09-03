@@ -5,6 +5,11 @@
    placeholders que parezcan datos, ni opciones preseleccionadas, ni ejemplos.
    El estado empieza vacío y solo se llena con lo que responde el usuario.
 
+   Entre pregunta y pregunta hay pantallas que no piden nada: la bienvenida,
+   el resumen de lo que va a poder hacer, la curva de su objetivo y la
+   preparación final. Sirven para que el recorrido respire y para que lo que
+   ha contestado tenga una consecuencia visible.
+
    Las pantallas que se muestran dependen del nivel: quien va a FP no ve las
    de Bachillerato y al revés.
    ========================================================================== */
@@ -16,10 +21,12 @@
     name: '', level: '', course: '', branch: '',
     fp_grade: '', fp_family: '', fp_cycle: '',
     university_degree: '', subjects: [],
+    goal_now: '', goal_target: '', goal_days: '',
   };
 
   var indice = 0;
   var yendoAtras = false;
+  var preparando = false;
 
   var el = {
     boot: Studdy.$('#boot'),
@@ -39,6 +46,25 @@
   // ------------------------------------------------------------------------
 
   var PANTALLAS = {
+
+    bienvenida: {
+      pregunta: 'Bienvenido a Studdy',
+      hint: 'Un minuto de preguntas y la IA sabrá a qué nivel escribirte. ' +
+        'Ni por encima ni por debajo de tu curso.',
+      nota: 'No pedimos nada del colegio. Solo lo que nos cuentes tú.',
+      cta: 'Empezar',
+      sinAtras: true,
+      cuerpo: function () {
+        return montaje() + bullets([
+          ['subir', 't-violet', 'Subes un tema', 'PDF o texto pegado'],
+          ['chispa', 't-amber', 'La IA lo trabaja', 'A la dificultad de tu curso'],
+          ['diana', 't-green', 'Tú lo estudias', 'Esquema, tarjetas, examen'],
+        ]);
+      },
+      conectar: function () {},
+      valido: function () { return true; },
+    },
+
     nombre: {
       pregunta: '¿Cómo te llamas?',
       hint: 'Para que la app te hable a ti y no a un usuario cualquiera.',
@@ -58,6 +84,23 @@
         campo.focus();
       },
       valido: function () { return estado.name.length > 0; },
+    },
+
+    saludo: {
+      pregunta: function () { return 'Encantado, ' + primerNombre() + '.'; },
+      hint: 'Esto es lo que vas a poder sacar de cada apunte que subas.',
+      cta: 'Suena bien',
+      cuerpo: function () {
+        return bullets([
+          ['esquema', 't-violet', 'Esquemas', 'El tema ordenado y jerarquizado'],
+          ['flashcards', 't-blue', 'Flashcards', 'Con repaso espaciado día a día'],
+          ['examen', 't-coral', 'Exámenes', 'Test y desarrollo, con corrección'],
+          ['presentacion', 't-amber', 'Presentaciones', 'Listas para exponer en clase'],
+          ['chat', 't-green', 'Un chat que ya te conoce', 'Sabe tu curso y tus asignaturas'],
+        ]);
+      },
+      conectar: function () {},
+      valido: function () { return true; },
     },
 
     nivel: {
@@ -236,21 +279,171 @@
       },
       conectar: conectarAsignaturas,
       valido: function () { return estado.subjects.length > 0; },
-      ultima: true,
+    },
+
+    // --- Objetivo -----------------------------------------------------------
+
+    nota_actual: {
+      pregunta: '¿Por qué nota andas ahora?',
+      hint: 'Tu media aproximada. Nadie más la va a ver, y sirve para saber ' +
+        'desde dónde partes.',
+      cuerpo: function () { return notas(1, 10, 'goal_now'); },
+      conectar: function () { conectarNotas('goal_now', function () {
+        // Si la meta se queda por debajo de la nota de partida, se descarta.
+        if (estado.goal_target && Number(estado.goal_target) <= Number(estado.goal_now)) {
+          estado.goal_target = '';
+        }
+      }); },
+      valido: function () { return !!estado.goal_now; },
+    },
+
+    nota_meta: {
+      pregunta: '¿A qué nota quieres llegar?',
+      hint: function () {
+        return 'Tiene que ser mayor que ' + estado.goal_now + ', que es de donde sales.';
+      },
+      cuerpo: function () {
+        return notas(Number(estado.goal_now) + 1, 10, 'goal_target');
+      },
+      conectar: function () { conectarNotas('goal_target'); },
+      valido: function () { return !!estado.goal_target; },
+    },
+
+    dedicacion: {
+      pregunta: '¿Cuántos días a la semana vas a estudiar?',
+      hint: 'Sé realista. Es mejor tres días de verdad que siete de mentira.',
+      cuerpo: function () {
+        return opciones([
+          ['2', 'Dos días', 'Fin de semana y poco más', 'reloj'],
+          ['3', 'Tres días', 'Un rato entre semana', 'reloj'],
+          ['5', 'Cinco días', 'De lunes a viernes', 'rayo'],
+          ['7', 'Todos los días', 'Sin excepción', 'fuego'],
+        ].map(function (o, i) {
+          return { valor: o[0], etiqueta: o[1], sub: o[2], icono: o[3], color: color(i + 1) };
+        }), 'goal_days');
+      },
+      conectar: function () { conectarOpciones('goal_days'); },
+      valido: function () { return !!estado.goal_days; },
+    },
+
+    grafica: {
+      pregunta: function () {
+        return 'De ' + estado.goal_now + ' a ' + estado.goal_target + ', ' +
+          primerNombre() + '.';
+      },
+      hint: function () {
+        return 'Estudiando ' + textoDias() + ', el salto entra en unas ' +
+          plan().semanas + ' semanas.';
+      },
+      nota: 'La curva es una estimación con tus dos números, no una promesa.',
+      cta: 'Me comprometo',
+      cuerpo: function () {
+        var p = plan();
+        return '<div class="goal-card">' +
+          '<div class="goal-card__head">' +
+            '<span class="pill pill--accent">' + Studdy.icons.diana + 'Tu objetivo</span>' +
+            '<span class="goal-card__fecha">' + Studdy.escapeHtml(p.fecha) + '</span>' +
+          '</div>' +
+          Studdy.charts.curva({
+            desde: Number(estado.goal_now),
+            hasta: Number(estado.goal_target),
+            etiquetaIni: 'Ahora ' + estado.goal_now,
+            etiquetaFin: estado.goal_target,
+            pasos: ['Hoy', 'En ' + p.semanas + ' semanas'],
+            alt: 'Curva estimada de ' + estado.goal_now + ' a ' + estado.goal_target,
+          }) +
+        '</div>' +
+        bullets([
+          ['reloj', 't-blue', textoDias(true), 'La cadencia que has elegido'],
+          ['flashcards', 't-violet', 'Repaso espaciado', 'Studdy te dirá qué tarjetas tocan cada día'],
+          ['fuego', 't-coral', 'Racha real', 'Cuenta los días que de verdad has trabajado'],
+        ]);
+      },
+      conectar: function () {},
+      valido: function () { return true; },
+    },
+
+    preparando: {
+      pregunta: 'Preparando tu Studdy',
+      sinAtras: true,
+      sinBoton: true,
+      cuerpo: function () {
+        return '<div class="setup">' +
+          '<div class="setup__pct"><span id="pct">0</span><i>%</i></div>' +
+          '<div class="progress progress--lg">' +
+            '<div class="progress__fill" id="setup-fill" style="width:0%"></div>' +
+          '</div>' +
+          '<ol class="setup__list" id="pasos">' +
+            pasosPreparacion().map(function (p, i) {
+              return '<li class="setup__step" data-paso="' + i + '">' +
+                '<span class="setup__mark"><i>' + (i + 1) + '</i>' + Studdy.icons.ok + '</span>' +
+                '<span class="setup__text">' + Studdy.escapeHtml(p) + '</span>' +
+              '</li>';
+            }).join('') +
+          '</ol>' +
+        '</div>';
+      },
+      conectar: arrancarPreparacion,
+      valido: function () { return true; },
     },
   };
 
   // Qué pantallas tocan según el nivel elegido.
   function secuencia() {
-    var s = ['nombre', 'nivel'];
+    var s = ['bienvenida', 'nombre', 'saludo', 'nivel'];
 
     if (estado.level === 'ESO') s.push('eso_curso');
     else if (estado.level === 'Bachillerato') s.push('bach_curso', 'bach_rama');
     else if (estado.level === 'FP') s.push('fp_familia', 'fp_grado', 'fp_ciclo');
     else if (estado.level === 'Universidad') s.push('uni_carrera', 'uni_curso');
 
-    if (estado.level) s.push('asignaturas');
+    // El tramo final entra entero en cuanto hay nivel: si se fuera añadiendo
+    // a medida que responde, la barra de progreso llegaría al 100% a mitad de
+    // camino y luego retrocedería. Ninguna de estas pantallas es alcanzable
+    // sin haber contestado la anterior, porque el botón se queda bloqueado.
+    if (estado.level) {
+      s.push('asignaturas', 'nota_actual', 'nota_meta', 'dedicacion',
+             'grafica', 'preparando');
+    }
+
     return s;
+  }
+
+  // ------------------------------------------------------------------------
+  // El objetivo, calculado
+  // ------------------------------------------------------------------------
+
+  // Cuántas semanas para pasar de una nota a otra con N días de estudio a la
+  // semana. Es una regla de tres, no un modelo: cada décima de salto pide
+  // aproximadamente una sesión y media de trabajo.
+  function plan() {
+    var salto = Math.max(0.5, Number(estado.goal_target) - Number(estado.goal_now));
+    var dias = Math.max(1, Number(estado.goal_days) || 3);
+    var semanas = Math.round((salto * 15) / dias);
+
+    semanas = Math.min(24, Math.max(3, semanas));
+
+    var fin = new Date();
+    fin.setDate(fin.getDate() + semanas * 7);
+
+    var MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+                 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+    return {
+      semanas: semanas,
+      fecha: fin.getDate() + ' ' + MESES[fin.getMonth()] + ' ' + fin.getFullYear(),
+      iso: fin.toISOString().slice(0, 10),
+    };
+  }
+
+  function textoDias(mayus) {
+    var d = Number(estado.goal_days);
+    var t = d === 7 ? 'todos los días' : d + ' días a la semana';
+    return mayus ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+  }
+
+  function primerNombre() {
+    return estado.name.split(/\s+/)[0] || estado.name;
   }
 
   // ------------------------------------------------------------------------
@@ -269,6 +462,50 @@
         '</span>' +
       '</button>';
     }).join('') + '</div>';
+  }
+
+  // Rejilla de notas: botones redondos del 1 al 10.
+  function notas(desde, hasta, campo) {
+    var html = '';
+    for (var v = desde; v <= hasta; v++) {
+      html += '<button class="grade' + (estado[campo] === String(v) ? ' is-on' : '') + '" ' +
+        'type="button" data-nota="' + v + '">' + v + '</button>';
+    }
+    return '<div class="grade-grid">' + html + '</div>';
+  }
+
+  function conectarNotas(campo, alCambiar) {
+    Studdy.$$('[data-nota]', el.body).forEach(function (boton) {
+      boton.addEventListener('click', function () {
+        estado[campo] = boton.dataset.nota;
+        if (alCambiar) alCambiar();
+        Studdy.$$('.grade', el.body).forEach(function (g) { g.classList.remove('is-on'); });
+        boton.classList.add('is-on');
+        revisar();
+      });
+    });
+  }
+
+  // Filas con icono para las pantallas que no preguntan nada.
+  function bullets(lista) {
+    return '<ul class="perks stagger">' + lista.map(function (b) {
+      return '<li class="perk ' + b[1] + '">' +
+        '<span class="tile">' + Studdy.icons[b[0]] + '</span>' +
+        '<span class="perk__body">' +
+          '<span class="perk__title">' + Studdy.escapeHtml(b[2]) + '</span>' +
+          '<span class="perk__text">' + Studdy.escapeHtml(b[3]) + '</span>' +
+        '</span>' +
+      '</li>';
+    }).join('') + '</ul>';
+  }
+
+  // Tres fichas apiladas que giran: el adorno de la bienvenida.
+  function montaje() {
+    return '<div class="stack" aria-hidden="true">' +
+      '<span class="stack__card stack__card--3 t-coral">' + Studdy.icons.examen + '</span>' +
+      '<span class="stack__card stack__card--2 t-blue">' + Studdy.icons.flashcards + '</span>' +
+      '<span class="stack__card stack__card--1">' + Studdy.icons.esquema + '</span>' +
+    '</div>';
   }
 
   function conectarOpciones(campo, alCambiar) {
@@ -368,16 +605,19 @@
   // Motor
   // ------------------------------------------------------------------------
 
+  function texto(v) { return typeof v === 'function' ? v() : v; }
+
   function pintar() {
     var lista = secuencia();
     if (indice >= lista.length) indice = lista.length - 1;
 
     var p = PANTALLAS[lista[indice]];
+    var hint = texto(p.hint);
 
     el.body.innerHTML =
       '<div class="flow__question">' +
-        '<span class="bubble">' + Studdy.escapeHtml(p.pregunta) + '</span>' +
-        (p.hint ? '<p class="flow__hint">' + Studdy.escapeHtml(p.hint) + '</p>' : '') +
+        '<span class="bubble">' + Studdy.escapeHtml(texto(p.pregunta)) + '</span>' +
+        (hint ? '<p class="flow__hint">' + Studdy.escapeHtml(hint) + '</p>' : '') +
       '</div>' +
       p.cuerpo();
 
@@ -389,11 +629,13 @@
     p.conectar();
 
     el.fill.style.width = ((indice + 1) / lista.length) * 100 + '%';
-    el.back.hidden = indice === 0;
-    el.next.textContent = p.ultima ? 'Finalizar' : 'Continuar';
+    el.back.hidden = indice === 0 || !!p.sinAtras;
+    el.next.hidden = !!p.sinBoton;
+    el.next.textContent = p.cta || 'Continuar';
 
-    el.note.hidden = !p.nota;
-    if (p.nota) el.note.innerHTML = Studdy.icons.escudo + Studdy.escapeHtml(p.nota);
+    var nota = texto(p.nota);
+    el.note.hidden = !nota;
+    if (nota) el.note.innerHTML = Studdy.icons.escudo + Studdy.escapeHtml(nota);
 
     el.error.innerHTML = '';
     revisar();
@@ -413,14 +655,11 @@
       indice++;
       pintar();
       window.scrollTo(0, 0);
-      return;
     }
-
-    finalizar();
   });
 
   el.back.addEventListener('click', function () {
-    if (indice === 0) return;
+    if (indice === 0 || preparando) return;
     indice--;
     yendoAtras = true;
     pintar();
@@ -428,57 +667,145 @@
   });
 
   // ------------------------------------------------------------------------
-  // Guardado
+  // Preparación final
+  //
+  // El porcentaje no es decorativo: cada tramo se cierra cuando termina de
+  // verdad el paso que lo acompaña. Solo se le pone un mínimo de tiempo para
+  // que se pueda leer lo que está pasando.
   // ------------------------------------------------------------------------
 
-  function finalizar() {
-    el.error.innerHTML = '';
-    el.next.disabled = true;
-    el.back.disabled = true;
-    el.next.innerHTML = '<span class="spinner"></span> Guardando…';
-
-    guardar()
-      .then(function () { window.location.href = 'app.html'; })
-      .catch(function (err) {
-        el.error.innerHTML = Studdy.errorHtml(err.message);
-        el.next.disabled = false;
-        el.back.disabled = false;
-        el.next.textContent = 'Finalizar';
-      });
+  function pasosPreparacion() {
+    var n = estado.subjects.length;
+    return [
+      'Creando tu perfil',
+      'Guardando ' + n + (n === 1 ? ' asignatura' : ' asignaturas'),
+      'Ajustando la IA a ' + nivelCorto(),
+      'Dejándote el inicio listo',
+    ];
   }
 
-  function guardar() {
-    var client;
+  function nivelCorto() {
+    if (estado.level === 'ESO') return estado.course + ' de la ESO';
+    if (estado.level === 'Bachillerato') return estado.course + ' de Bachillerato';
+    if (estado.level === 'FP') return 'FP de grado ' + estado.fp_grade;
+    if (estado.level === 'Universidad') return estado.university_degree;
+    return estado.level;
+  }
 
-    return Studdy.getClient()
+  var TRAMOS = [22, 58, 80, 100];
+
+  function arrancarPreparacion() {
+    if (preparando) return;
+    preparando = true;
+
+    var pct = Studdy.$('#pct', el.body);
+    var fill = Studdy.$('#setup-fill', el.body);
+    var pasos = Studdy.$$('.setup__step', el.body);
+
+    var actual = 0;
+    pasos[0].classList.add('is-doing');
+
+    function hasta(objetivo) {
+      return new Promise(function (listo) {
+        var t0 = performance.now();
+        var desde = actual;
+        (function paso(t) {
+          var k = Math.min(1, (t - t0) / 520);
+          actual = desde + (objetivo - desde) * k;
+          pct.textContent = Math.round(actual);
+          fill.style.width = actual + '%';
+          if (k < 1) requestAnimationFrame(paso); else listo();
+        })(t0);
+      });
+    }
+
+    function cerrar(i) {
+      pasos[i].classList.remove('is-doing');
+      pasos[i].classList.add('is-done');
+      if (pasos[i + 1]) pasos[i + 1].classList.add('is-doing');
+      return hasta(TRAMOS[i]);
+    }
+
+    var client, userId;
+
+    Studdy.getClient()
       .then(function (c) { client = c; return c.auth.getUser(); })
       .then(function (res) {
         var user = res.data ? res.data.user : null;
         if (!user) throw new Error('Tu sesión ha caducado. Vuelve a entrar.');
-
-        return client.from('profiles').upsert({
-          id: user.id,
-          name: estado.name,
-          level: estado.level,
-          course: estado.course || null,
-          branch: estado.branch || null,
-          fp_grade: estado.fp_grade || null,
-          fp_family: estado.fp_family || null,
-          fp_cycle: estado.fp_cycle || null,
-          university_degree: estado.university_degree || null,
-        }).select().single().then(function (out) {
-          if (out.error) throw new Error(traducir(out.error));
-          return user.id;
-        });
+        userId = user.id;
+        return guardarPerfil(client, user.id);
       })
-      .then(function (profileId) {
-        var filas = estado.subjects.map(function (n) {
-          return { profile_id: profileId, name: n };
-        });
-        return client.from('subjects').insert(filas).then(function (out) {
-          if (out.error) throw new Error(traducir(out.error));
-        });
+      .then(function () { return cerrar(0); })
+      .then(function () { return guardarAsignaturas(client, userId); })
+      .then(function () { return cerrar(1); })
+      .then(function () { return cerrar(2); })
+      .then(function () { return cerrar(3); })
+      .then(function () {
+        return new Promise(function (r) { setTimeout(r, 380); });
+      })
+      .then(function () { window.location.href = 'app.html'; })
+      .catch(function (err) {
+        preparando = false;
+        el.error.innerHTML = Studdy.errorHtml(err.message);
+        el.next.hidden = false;
+        el.next.disabled = false;
+        el.next.textContent = 'Reintentar';
+        el.next.onclick = function () {
+          el.next.onclick = null;
+          el.error.innerHTML = '';
+          pintar();
+        };
       });
+  }
+
+  // ------------------------------------------------------------------------
+  // Guardado
+  // ------------------------------------------------------------------------
+
+  function guardarPerfil(client, id) {
+    var p = plan();
+
+    var base = {
+      id: id,
+      name: estado.name,
+      level: estado.level,
+      course: estado.course || null,
+      branch: estado.branch || null,
+      fp_grade: estado.fp_grade || null,
+      fp_family: estado.fp_family || null,
+      fp_cycle: estado.fp_cycle || null,
+      university_degree: estado.university_degree || null,
+    };
+
+    var conObjetivo = Object.assign({}, base, {
+      goal_now: Number(estado.goal_now),
+      goal_target: Number(estado.goal_target),
+      goal_days: Number(estado.goal_days),
+      goal_date: p.iso,
+    });
+
+    // Las columnas del objetivo llegaron en la migración 03. Si todavía no se
+    // ha ejecutado, el perfil se guarda igual sin ellas en vez de romper.
+    return escribirPerfil(client, conObjetivo).catch(function (err) {
+      if (!/column .* does not exist|could not find the .* column/i.test(err.message)) throw err;
+      return escribirPerfil(client, base);
+    });
+  }
+
+  function escribirPerfil(client, fila) {
+    return client.from('profiles').upsert(fila).select().single().then(function (out) {
+      if (out.error) throw new Error(traducir(out.error));
+    });
+  }
+
+  function guardarAsignaturas(client, id) {
+    var filas = estado.subjects.map(function (n) {
+      return { profile_id: id, name: n };
+    });
+    return client.from('subjects').insert(filas).then(function (out) {
+      if (out.error) throw new Error(traducir(out.error));
+    });
   }
 
   function traducir(error) {

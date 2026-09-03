@@ -15,7 +15,7 @@ Studdy.views.profile = (function () {
     pintar(vista, p, null, null);
 
     // La cuenta y la racha se piden aparte para no retrasar el pintado.
-    Promise.all([Studdy.currentUser(), diasActivos()])
+    Promise.all([Studdy.currentUser(), Studdy.app.activity()])
       .then(function (res) { pintar(vista, p, res[0], res[1]); })
       .catch(function () { /* se queda lo ya pintado */ });
   }
@@ -48,6 +48,8 @@ Studdy.views.profile = (function () {
         stat(tarjetas, 'tarjetas') +
         stat(acierto, 'de acierto') +
       '</div>' +
+
+      quincena(actividad) +
 
       '<p class="section-title">Atajos</p>' +
       '<div class="menu-list stagger">' +
@@ -89,6 +91,29 @@ Studdy.views.profile = (function () {
 
   // ------------------------------------------------------------------------
 
+  // Las dos últimas semanas, día a día. Sale de la actividad ya guardada.
+  function quincena(actividad) {
+    if (!actividad || !actividad.total) return '';
+
+    var dias = Studdy.app.lastDays(actividad.dias, 14);
+    var activos = dias.filter(function (d) { return d.valor; }).length;
+
+    return (
+      '<p class="section-title">Tus dos últimas semanas</p>' +
+      '<div class="block">' +
+        '<div class="block__head" style="margin-bottom:18px">' +
+          '<div>' +
+            '<div class="block__title">' + activos + ' de 14 días</div>' +
+            '<p class="block__sub">con algo hecho en Studdy</p>' +
+          '</div>' +
+          '<span class="pill">' + actividad.total +
+            (actividad.total === 1 ? ' día en total' : ' días en total') + '</span>' +
+        '</div>' +
+        Studdy.charts.barras(dias, { clase: 'chart-barras--fina' }) +
+      '</div>'
+    );
+  }
+
   function stat(valor, etiqueta) {
     return '<div class="profile-stat"><b>' + Studdy.escapeHtml(String(valor)) + '</b>' +
       '<span>' + Studdy.escapeHtml(etiqueta) + '</span></div>';
@@ -127,6 +152,15 @@ Studdy.views.profile = (function () {
       datos.push(['Curso', p.course]);
     }
 
+    if (p.goal_now != null && p.goal_target != null) {
+      datos.push(['Objetivo', 'de ' + p.goal_now + ' a ' + p.goal_target]);
+      if (p.goal_days) {
+        datos.push(['Ritmo', p.goal_days === 7 ? 'todos los días'
+          : p.goal_days + ' días a la semana']);
+      }
+      if (p.goal_date) datos.push(['Fecha que te pusiste', Studdy.formatDate(p.goal_date)]);
+    }
+
     datos.push(['En Studdy desde', Studdy.formatDate(p.created_at)]);
 
     return datos.filter(function (d) { return d[1]; }).map(function (d) { return dato(d[0], d[1]); });
@@ -146,48 +180,6 @@ Studdy.views.profile = (function () {
       dato('Correo', usuario.email || '—'),
       dato('Entras con', proveedores.join(' y ') || '—'),
     ];
-  }
-
-  // ------------------------------------------------------------------------
-  // Racha: días seguidos con actividad. Sale de las fechas ya guardadas
-  // (apuntes subidos, exámenes corregidos, tarjetas repasadas).
-  // ------------------------------------------------------------------------
-
-  async function diasActivos() {
-    var fechas = {};
-
-    function marcar(iso) {
-      if (iso) fechas[String(iso).slice(0, 10)] = true;
-    }
-
-    Studdy.app.state.notes.forEach(function (n) { marcar(n.created_at); });
-    (Studdy.app.state.attempts || []).forEach(function (a) { marcar(a.created_at); });
-
-    try {
-      var client = await Studdy.getClient();
-      var out = await client.from('card_reviews').select('updated_at');
-      if (!out.error) (out.data || []).forEach(function (r) { marcar(r.updated_at); });
-    } catch (e) { /* la tabla es opcional */ }
-
-    var hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-
-    function clave(d) { return d.toISOString().slice(0, 10); }
-
-    // La racha sigue viva si hoy o ayer hubo actividad.
-    var cursor = new Date(hoy);
-    if (!fechas[clave(cursor)]) {
-      cursor.setDate(cursor.getDate() - 1);
-      if (!fechas[clave(cursor)]) return { racha: 0, total: Object.keys(fechas).length };
-    }
-
-    var racha = 0;
-    while (fechas[clave(cursor)]) {
-      racha++;
-      cursor.setDate(cursor.getDate() - 1);
-    }
-
-    return { racha: racha, total: Object.keys(fechas).length };
   }
 
   return { render: render };

@@ -1444,3 +1444,11 @@ body.app { background: var(--bg); }
   .stats { grid-template-columns: repeat(4, 1fr); }
   .stat--wide { grid-column: span 2; }
 }
+
+.block__sub {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-top: 3px;
+  line-height: 1.35;
+}

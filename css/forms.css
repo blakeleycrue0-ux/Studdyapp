@@ -72,19 +72,27 @@ body.screen {
 
 .flow__foot { padding-top: 24px; }
 
+/* El icono va dentro del texto, no en una columna aparte: si la frase ocupa
+   dos líneas, el escudo tiene que quedarse junto a la primera palabra. */
+.flow__note[hidden] { display: none; }
+
 .flow__note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
+  display: block;
   color: var(--ink-3);
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.45;
   margin-bottom: 16px;
   text-align: center;
+  text-wrap: balance;
 }
-.flow__note svg { width: 17px; height: 17px; color: var(--accent); flex: none; }
-.flow__note { justify-content: center; }
+.flow__note svg {
+  display: inline-block;
+  width: 16px; height: 16px;
+  margin-right: 7px;
+  vertical-align: -3px;
+  color: var(--accent);
+}
 
 /* Cada pantalla entra desde la derecha */
 .flow__body.is-entering { animation: screen-in .34s cubic-bezier(.22, 1, .36, 1) both; }
@@ -254,3 +262,201 @@ body.screen {
 
 .panel__error:empty { display: none; }
 .panel__error { margin-bottom: 20px; }
+
+/* --------------------------------------------------------------------------
+   Pantallas que no preguntan nada
+   -------------------------------------------------------------------------- */
+
+/* Tres fichas apiladas, ligeramente giradas, que flotan. */
+.stack {
+  position: relative;
+  height: 132px;
+  margin: 4px 0 30px;
+  display: grid;
+  place-items: center;
+}
+
+.stack__card {
+  position: absolute;
+  width: 96px; height: 96px;
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--tile, var(--accent));
+  box-shadow: var(--shadow-pop);
+  animation: flota 5.5s ease-in-out infinite;
+}
+.stack__card svg { width: 40px; height: 40px; stroke-width: 1.9; }
+
+.stack__card--1 {
+  background: var(--accent);
+  color: var(--on-accent);
+  z-index: 3;
+}
+.stack__card--2 {
+  transform: translateX(-68px) rotate(-14deg) scale(.82);
+  z-index: 2;
+  animation-delay: -1.8s;
+}
+.stack__card--3 {
+  transform: translateX(68px) rotate(14deg) scale(.82);
+  z-index: 1;
+  animation-delay: -3.6s;
+}
+
+@keyframes flota {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -10px; }
+}
+
+/* Filas con icono: lo que ganas, sin pedirte nada. */
+.perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+
+.perk { display: flex; align-items: center; gap: 15px; }
+
+.perk .tile {
+  width: 46px; height: 46px;
+  border-radius: 15px;
+}
+.perk .tile svg { width: 22px; height: 22px; }
+
+.perk__body { min-width: 0; }
+.perk__title {
+  display: block;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.perk__text {
+  display: block;
+  font-weight: 500;
+  font-size: 14.5px;
+  color: var(--ink-3);
+  margin-top: 1px;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   Notas: la rejilla del 1 al 10
+   -------------------------------------------------------------------------- */
+
+.grade-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 11px;
+}
+
+.grade {
+  aspect-ratio: 1;
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease,
+              background-color .16s ease, color .16s ease;
+  animation: rise .4s cubic-bezier(.22, 1, .36, 1) both;
+}
+.grade:nth-child(1) { animation-delay: .02s; }
+.grade:nth-child(2) { animation-delay: .05s; }
+.grade:nth-child(3) { animation-delay: .08s; }
+.grade:nth-child(4) { animation-delay: .11s; }
+.grade:nth-child(5) { animation-delay: .14s; }
+.grade:nth-child(6) { animation-delay: .17s; }
+.grade:nth-child(7) { animation-delay: .20s; }
+.grade:nth-child(8) { animation-delay: .23s; }
+.grade:nth-child(9) { animation-delay: .26s; }
+.grade:nth-child(n+10) { animation-delay: .29s; }
+
+.grade:hover { border-color: var(--line-2); }
+.grade:active { transform: scale(.94); }
+
+.grade.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  transform: scale(1.04);
+}
+
+/* --------------------------------------------------------------------------
+   Preparando tu cuenta
+   -------------------------------------------------------------------------- */
+
+.setup { padding-top: 6px; }
+
+.setup__pct {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  font-size: 68px;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 22px;
+}
+.setup__pct i { font-size: 30px; font-style: normal; font-weight: 800; }
+
+.progress--lg { height: 16px; }
+
+.setup__list {
+  list-style: none;
+  margin: 30px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.setup__step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  opacity: .38;
+  transition: opacity .3s ease;
+}
+.setup__step.is-doing, .setup__step.is-done { opacity: 1; }
+
+.setup__mark {
+  position: relative;
+  width: 30px; height: 30px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-3);
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease;
+}
+.setup__mark svg {
+  position: absolute;
+  width: 15px; height: 15px;
+  opacity: 0;
+  transform: scale(.4);
+  transition: opacity .25s ease, transform .3s cubic-bezier(.34, 1.5, .64, 1);
+}
+.setup__mark i { font-style: normal; transition: opacity .2s ease; }
+
+.setup__step.is-doing .setup__mark {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.setup__step.is-done .setup__mark {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.setup__step.is-done .setup__mark i { opacity: 0; }
+.setup__step.is-done .setup__mark svg { opacity: 1; transform: scale(1); }
+
+.setup__text { font-weight: 700; font-size: 16px; letter-spacing: -0.015em; }
+.setup__step.is-done .setup__text { color: var(--ink-2); }

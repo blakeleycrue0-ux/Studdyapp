@@ -303,6 +303,79 @@ Studdy.app = (function () {
     '</div>';
   }
 
+  // ------------------------------------------------------------------------
+  // Actividad real, día a día.
+  //
+  // No hay contador propio: la actividad se deduce de lo que ya está guardado
+  // —apuntes subidos, exámenes corregidos, tarjetas repasadas—. La usan el
+  // inicio y el perfil.
+  // ------------------------------------------------------------------------
+
+  function claveDia(d) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  // Se recalcula en cada llamada a propósito: el estado cambia según subes
+  // apuntes o repasas tarjetas, y una caché dejaría el inicio desfasado.
+  function actividad() {
+    return Studdy.getClient()
+      .then(function (c) { return c.from('card_reviews').select('updated_at'); })
+      .catch(function () { return { error: true }; })
+      .then(function (out) {
+        var dias = {};
+
+        function marcar(iso) {
+          if (!iso) return;
+          var k = String(iso).slice(0, 10);
+          dias[k] = (dias[k] || 0) + 1;
+        }
+
+        estado.notes.forEach(function (n) { marcar(n.created_at); });
+        (estado.attempts || []).forEach(function (a) { marcar(a.created_at); });
+        if (out && !out.error) (out.data || []).forEach(function (r) { marcar(r.updated_at); });
+
+        return { dias: dias, racha: racha(dias), total: Object.keys(dias).length };
+      });
+  }
+
+  // Días seguidos con actividad. Sigue viva si hubo algo hoy o ayer.
+  function racha(dias) {
+    var cursor = new Date();
+    cursor.setHours(0, 0, 0, 0);
+
+    if (!dias[claveDia(cursor)]) {
+      cursor.setDate(cursor.getDate() - 1);
+      if (!dias[claveDia(cursor)]) return 0;
+    }
+
+    var n = 0;
+    while (dias[claveDia(cursor)]) {
+      n++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return n;
+  }
+
+  // Los últimos `cuantos` días, del más antiguo al de hoy, listos para barras.
+  var INICIAL = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+
+  function ultimosDias(dias, cuantos) {
+    var salida = [];
+    for (var i = cuantos - 1; i >= 0; i--) {
+      var d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      salida.push({
+        etiqueta: INICIAL[d.getDay()],
+        valor: dias[claveDia(d)] || 0,
+        hoy: i === 0,
+      });
+    }
+    return salida;
+  }
+
   return {
     start: start,
     state: estado,
@@ -322,6 +395,8 @@ Studdy.app = (function () {
     bumpCount: bumpCount,
     rememberNote: recordarApunte,
     lastNote: ultimoApunte,
+    activity: actividad,
+    lastDays: ultimosDias,
     volver: volver,
     cabecera: cabecera,
   };

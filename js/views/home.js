@@ -16,12 +16,16 @@ Studdy.views.home = (function () {
       '<div id="agenda-slot"></div>' +
       continuar() +
       '<div id="repaso-slot"></div>' +
+      objetivo(s) +
+      '<div id="semana-slot"></div>' +
       progreso(s) +
+      evolucion(s) +
       herramientas() +
       asignaturas(s);
 
     pintarAgenda(vista);
     pintarRepaso(vista);
+    pintarSemana(vista);
   }
 
   // ------------------------------------------------------------------------
@@ -221,6 +225,130 @@ Studdy.views.home = (function () {
   function stat(valor, etiqueta) {
     return '<div class="stat"><div class="stat__value">' + valor + '</div>' +
       '<div class="stat__label">' + Studdy.escapeHtml(etiqueta) + '</div></div>';
+  }
+
+
+  // ------------------------------------------------------------------------
+  // El objetivo que se fijó en el onboarding.
+  //
+  // Solo aparece si respondió las pantallas de objetivo y si la migración 03
+  // está puesta. La curva es la misma estimación que vio entonces; lo que sí
+  // es real es cuánto queda y cuántos días ha trabajado desde que empezó.
+  // ------------------------------------------------------------------------
+
+  function objetivo(s) {
+    var p = s.profile;
+    if (!p || p.goal_now == null || p.goal_target == null || !p.goal_date) return '';
+
+    var fin = new Date(p.goal_date + 'T00:00:00');
+    var hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    var dias = Math.round((fin - hoy) / 86400000);
+    var restante = dias > 0
+      ? (dias === 1 ? 'Queda 1 día' : dias < 14 ? 'Quedan ' + dias + ' días'
+          : 'Quedan ' + Math.round(dias / 7) + ' semanas')
+      : 'La fecha que te pusiste ya ha llegado';
+
+    return (
+      '<p class="section-title">Tu objetivo</p>' +
+      '<div class="goal-card">' +
+        '<div class="goal-card__head">' +
+          '<span class="pill pill--accent">' + Studdy.icons.diana + 'De ' +
+            fmt(p.goal_now) + ' a ' + fmt(p.goal_target) + '</span>' +
+          '<span class="goal-card__fecha">' + Studdy.escapeHtml(restante) + '</span>' +
+        '</div>' +
+        Studdy.charts.curva({
+          desde: Number(p.goal_now),
+          hasta: Number(p.goal_target),
+          etiquetaIni: 'Ahora ' + fmt(p.goal_now),
+          etiquetaFin: fmt(p.goal_target),
+          pasos: ['Hoy', Studdy.formatDate(p.goal_date)],
+          alt: 'Curva estimada de ' + fmt(p.goal_now) + ' a ' + fmt(p.goal_target),
+        }) +
+        '<p class="goal-card__pie">' + Studdy.icons.info +
+          'Estimación con los números que diste al empezar.</p>' +
+      '</div>'
+    );
+  }
+
+  function fmt(n) {
+    var v = Number(n);
+    return String(v % 1 === 0 ? v : v.toFixed(1)).replace('.', ',');
+  }
+
+  // ------------------------------------------------------------------------
+  // Tu semana: días con actividad real de los últimos siete.
+  // ------------------------------------------------------------------------
+
+  function pintarSemana(vista) {
+    var slot = Studdy.$('#semana-slot', vista);
+    if (!slot) return;
+
+    Studdy.app.activity()
+      .then(function (a) {
+        if (!a.total) return;
+
+        var dias = Studdy.app.lastDays(a.dias, 7);
+        var suma = dias.reduce(function (t, d) { return t + d.valor; }, 0);
+        var activos = dias.filter(function (d) { return d.valor; }).length;
+
+        slot.innerHTML =
+          '<p class="section-title">Tu semana</p>' +
+          '<div class="block">' +
+            '<div class="block__head" style="margin-bottom:18px">' +
+              '<div>' +
+                '<div class="block__title">' + activos +
+                  (activos === 1 ? ' día activo' : ' días activos') + '</div>' +
+                '<p class="block__sub">' + suma +
+                  (suma === 1 ? ' cosa hecha' : ' cosas hechas') + ' en los últimos 7 días</p>' +
+              '</div>' +
+              (a.racha
+                ? '<span class="pill pill--accent">' + Studdy.icons.fuego + a.racha +
+                  (a.racha === 1 ? ' día' : ' días') + '</span>'
+                : '') +
+            '</div>' +
+            Studdy.charts.barras(dias) +
+          '</div>';
+      })
+      .catch(function () { /* sin datos, no se pinta nada */ });
+  }
+
+  // ------------------------------------------------------------------------
+  // Evolución de los aciertos, examen a examen. Datos reales de exam_attempts.
+  // ------------------------------------------------------------------------
+
+  function evolucion(s) {
+    var intentos = (s.attempts || []).filter(function (i) { return i.total; });
+    if (intentos.length < 3) return '';
+
+    var serie = intentos.slice(0, 10).reverse().map(function (i, k, todos) {
+      return {
+        valor: Math.round((i.score / i.total) * 100),
+        etiqueta: k === 0 ? 'Primero' : (k === todos.length - 1 ? 'Último' : ''),
+      };
+    });
+
+    var primero = serie[0].valor;
+    var ultimo = serie[serie.length - 1].valor;
+    var delta = ultimo - primero;
+
+    return (
+      '<p class="section-title">Cómo vas en los exámenes</p>' +
+      '<div class="block ' + (delta >= 0 ? 't-green' : 't-coral') + '">' +
+        '<div class="block__head" style="margin-bottom:14px">' +
+          '<div>' +
+            '<div class="block__title">' + ultimo + '% en el último</div>' +
+            '<p class="block__sub">' +
+              (delta > 0 ? '+' + delta + ' puntos desde el primero'
+                : delta < 0 ? delta + ' puntos desde el primero'
+                : 'igual que en el primero') +
+            '</p>' +
+          '</div>' +
+        '</div>' +
+        Studdy.charts.serie(serie, { alt: 'Porcentaje de acierto por examen' }) +
+      '</div>'
+    );
   }
 
   // ------------------------------------------------------------------------

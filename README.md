@@ -67,6 +67,14 @@ activar **Manual linking** en Authentication → Settings.
 Móvil primero: barra de navegación abajo con cinco destinos —Inicio, Apuntes,
 Repasar, Chat y Perfil— y contenido en una sola columna.
 
+El **onboarding** va de una pregunta por pantalla, con pantallas intercaladas
+que no piden nada: la bienvenida, un resumen de lo que va a poder hacer, la
+curva de su objetivo y la preparación final. Pregunta el nombre, el nivel y lo
+que cuelgue de él, las asignaturas, por qué nota va, a cuál quiere llegar y
+cuántos días a la semana va a estudiar. Con los dos últimos datos calcula una
+fecha estimada y dibuja la curva; la pantalla avisa de que es una estimación y
+no una promesa. Ningún campo arranca con valor.
+
 Cada apunte funciona como un **cuaderno**: dentro están su esquema, sus
 flashcards, su examen, su presentación y un chat sobre ese apunte concreto, en
 pestañas. El contenido se acumula alrededor del apunte en lugar de repartirse
@@ -74,25 +82,27 @@ por secciones sueltas.
 
 ```
 index.html            Landing pública
-login.html            Acceso: un único botón
-onboarding.html       Formulario de 4 pasos
+login.html            Acceso con correo o con Google
+onboarding.html       El recorrido de bienvenida
 app.html              Aplicación (armazón + barra inferior)
 
 css/
-  base.css            Tokens de diseño, reset y componentes comunes
-  landing.css         Landing, incluido el objeto 3D del hero
+  base.css            Tokens de diseño, reset, componentes y gráficas
+  landing.css         Landing, el objeto 3D del hero y las reseñas
   forms.css           Login y onboarding
   app.css             Aplicación, diapositivas y hoja de impresión
 
 js/
   core.js             Config, sesión, llamadas a la IA y utilidades
   icons.js            Iconos compartidos
+  charts.js           Gráficas en SVG: curva, barras y series
   data/fp.js          Las 26 familias de FP y sus ciclos formativos
+  landing.js          Demos y carrusel de reseñas de la landing
   login.js            Pantalla de acceso
-  onboarding.js       Los 4 pasos y el guardado del perfil
+  onboarding.js       Las pantallas de bienvenida y el guardado del perfil
   app.js              Estado, carga de datos y enrutador por hash
   views/
-    home.js           Inicio: agenda, continuar, progreso y herramientas
+    home.js           Inicio: agenda, objetivo, gráficas y herramientas
     notes.js          Lista de apuntes con filtro, y subida
     notebook.js       El cuaderno: pestañas del apunte y esquema
     flashcards.js     Generación y repaso dentro de un apunte
@@ -113,8 +123,25 @@ supabase/
   schema.sql                   Instalación completa
   migracion-01-intentos.sql    Solo exam_attempts
   migracion-02-funciones.sql   Agenda, repaso, ejercicios y trabajos
+  migracion-03-objetivo.sql    El objetivo de nota del onboarding
 netlify.toml          Publicación, redirecciones /api/* y cabeceras
 ```
+
+### Las reseñas de la landing son ejemplos
+
+La sección «Reseñas» de `index.html` se pinta desde la constante `RESENAS` de
+`js/landing.js`. Studdy todavía no tiene usuarios, así que ahí no hay
+opiniones reales: son fichas de muestra y por eso cada una lleva la etiqueta
+«Ejemplo» y la sección lo advierte encima. Es lo que evita que alguien las lea
+como opiniones de personas de verdad, que además es lo que exige la
+[Directiva (UE) 2019/2161](https://eur-lex.europa.eu/eli/dir/2019/2161/oj)
+sobre reseñas de consumidores.
+
+Cuando haya reseñas reales: sustituye esa lista por las suyas, quita el
+`review__tag` de la tarjeta en `pintarResenas()` y cambia el párrafo de aviso
+de la sección `#resenas` en `index.html`.
+
+---
 
 ## 3. Cómo se protegen las credenciales
 
@@ -159,7 +186,7 @@ Modelo en uso: `claude-sonnet-5`. Se cambia en la constante `MODEL` de
 
 | Tabla | Contenido |
 |---|---|
-| `profiles` | Nombre y datos académicos. `id` es el `auth.uid()` del usuario. |
+| `profiles` | Nombre, datos académicos y el objetivo de nota. `id` es el `auth.uid()` del usuario. |
 | `subjects` | Asignaturas o módulos añadidos en el onboarding. |
 | `notes` | Apuntes subidos (texto extraído del PDF o pegado a mano). |
 | `summaries` | Esquemas generados por la IA. |
@@ -177,9 +204,12 @@ Todas tienen RLS activado y políticas de `select`, `insert`, `update` y
 
 **Las tablas de las migraciones son opcionales.** Si no existen, la app funciona
 igual y solo se oculta lo que dependa de ellas: sin `exam_attempts` no hay
-porcentaje de aciertos, y sin las de la migración 02 no hay agenda, repaso
-espaciado, ejercicios ni trabajos. Para añadirlas a una base ya creada, ejecuta
-`supabase/migracion-01-intentos.sql` y `supabase/migracion-02-funciones.sql`.
+porcentaje de aciertos, sin las de la migración 02 no hay agenda, repaso
+espaciado, ejercicios ni trabajos, y sin las columnas de la migración 03 el
+onboarding guarda el perfil sin el objetivo y el Inicio no enseña la curva.
+Para añadirlas a una base ya creada, ejecuta las tres por orden:
+`supabase/migracion-01-intentos.sql`, `supabase/migracion-02-funciones.sql` y
+`supabase/migracion-03-objetivo.sql`.
 
 **Una nota sobre `presentations`:** además de `note_id` lleva `profile_id`, y
 `note_id` admite nulos. Es porque una presentación se puede generar escribiendo
