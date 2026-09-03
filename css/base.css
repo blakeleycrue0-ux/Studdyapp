@@ -1,80 +1,96 @@
 /* ==========================================================================
-   Studdy — base: tokens, reset y componentes compartidos
+   Studdy — base
+   Tema oscuro, tipografía geométrica pesada y una paleta de color por
+   elemento. Todo lo visual cuelga de estas variables.
    ========================================================================== */
 
 :root {
-  /* Verde de acento */
-  --green-900: #06301f;
-  --green-800: #084229;
-  --green-700: #0a5636;
-  --green-600: #0d7a4f;
-  --green-500: #12a066;
-  --green-400: #35bd83;
-  --green-300: #7fdcac;
-  --green-200: #b5ecd0;
-  --green-100: #d9f6e7;
-  --green-50:  #eefaf3;
+  /* --- Superficies. Del fondo hacia arriba. --- */
+  --bg:        #0A0D14;
+  --bg-soft:   #0F131C;
+  --surface:   #161B27;
+  --surface-2: #1E2431;
+  --surface-3: #262D3C;
 
-  /* Tinta y papel */
-  --ink:    #10221a;
-  --ink-2:  #3d5348;
-  --ink-3:  #6d8175;
-  --paper:  #ffffff;
-  --paper-2:#f5f8f6;
-  --line:   #e1e9e4;
-  --line-2: #cdd9d2;
+  --line:   #232A38;
+  --line-2: #333B4C;
 
-  --danger: #b3261e;
-  --amber:  #a86a00;
+  /* --- Texto --- */
+  --ink:   #FFFFFF;
+  --ink-2: #A9B2C4;
+  --ink-3: #6B7588;
 
-  --radius-sm: 8px;
-  --radius:    14px;
-  --radius-lg: 22px;
+  /* --- Acento. Cambiar estas tres cambia toda la app. --- */
+  --accent:      #22E07E;
+  --accent-soft: #1B3A2B;
+  --accent-deep: #0E7A45;
+  --on-accent:   #04160C;
 
-  --shadow-card: 0 1px 2px rgba(16, 34, 26, .05), 0 8px 24px -12px rgba(16, 34, 26, .14);
-  --shadow-pop:  0 2px 6px rgba(16, 34, 26, .06), 0 20px 48px -20px rgba(16, 34, 26, .28);
+  /* --- Un color por elemento: listas, asignaturas, herramientas. --- */
+  --c-violet: #8E7CF7;
+  --c-blue:   #4D9BFF;
+  --c-green:  #2FDB7F;
+  --c-coral:  #FF7C5C;
+  --c-pink:   #FF6FB3;
+  --c-amber:  #FFB224;
+  --c-cyan:   #25D6EE;
+  --c-lime:   #A9E635;
 
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --danger: #FF5B5B;
+  --warn:   #FFB224;
 
-  --wrap: 1120px;
+  --r-sm: 12px;
+  --r:    18px;
+  --r-lg: 24px;
+  --r-xl: 30px;
+
+  --shadow:     0 2px 8px rgba(0, 0, 0, .4);
+  --shadow-pop: 0 18px 44px -18px rgba(0, 0, 0, .85);
+  --glow:       0 0 0 1px rgba(255, 255, 255, .04) inset;
+
+  --font: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --wrap: 560px;
+  --tabbar: 76px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+}
 
 body {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font);
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--ink);
-  background: var(--paper);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
   margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
 }
 
 p { margin: 0; }
-
 img, svg { display: block; max-width: 100%; }
-
 button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); }
 
-a { color: var(--green-700); }
+::selection { background: var(--accent); color: var(--on-accent); }
 
 .wrap {
   width: 100%;
   max-width: var(--wrap);
   margin-inline: auto;
-  padding-inline: 24px;
+  padding-inline: 20px;
 }
 
 .visually-hidden {
@@ -94,261 +110,310 @@ a { color: var(--green-700); }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 19px;
-  letter-spacing: -0.03em;
+  gap: 11px;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.04em;
   color: var(--ink);
   text-decoration: none;
 }
 
 .brand__mark {
-  width: 30px; height: 30px;
-  border-radius: 9px;
-  background: linear-gradient(150deg, var(--green-500), var(--green-700));
+  width: 34px; height: 34px;
+  border-radius: 11px;
+  background: var(--accent);
+  color: var(--on-accent);
   display: grid;
   place-items: center;
-  color: #fff;
   flex: none;
-  box-shadow: 0 3px 10px -3px rgba(13, 122, 79, .55);
 }
-
-.brand__mark svg { width: 17px; height: 17px; }
+.brand__mark svg { width: 19px; height: 19px; }
 
 /* --------------------------------------------------------------------------
    Botones
    -------------------------------------------------------------------------- */
 
 .btn {
-  --btn-bg: var(--green-600);
-  --btn-fg: #fff;
-  --btn-bd: var(--green-600);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 12px 22px;
-  border: 1px solid var(--btn-bd);
+  gap: 10px;
+  padding: 15px 26px;
+  border: 0;
   border-radius: 999px;
-  background: var(--btn-bg);
-  color: var(--btn-fg);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 15px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 16px;
   letter-spacing: -0.01em;
   text-decoration: none;
   cursor: pointer;
-  transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease,
-              border-color .16s ease, color .16s ease;
-  white-space: nowrap;
+  transition: transform .12s ease, opacity .15s ease, background-color .15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn:hover:not(:disabled) { transform: translateY(-1px); }
-.btn:active:not(:disabled) { transform: translateY(0); }
+/* Sin esto, un icono dentro de un botón se estira a su tamaño natural */
+.btn svg { width: 19px; height: 19px; flex: none; }
+.btn--lg svg { width: 21px; height: 21px; }
+.btn--sm svg { width: 17px; height: 17px; }
 
-.btn:focus-visible {
-  outline: 2px solid var(--green-600);
-  outline-offset: 3px;
+.btn:active:not(:disabled) { transform: scale(.97); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* El principal es blanco, como en las apps que te gustan: destaca más que
+   cualquier color sobre un fondo tan oscuro. */
+.btn--primary {
+  background: #FFFFFF;
+  color: #0A0D14;
+  font-weight: 800;
 }
 
-.btn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn--primary { box-shadow: 0 4px 14px -6px rgba(13, 122, 79, .7); }
-.btn--primary:hover:not(:disabled) {
-  --btn-bg: var(--green-700);
-  --btn-bd: var(--green-700);
-  box-shadow: 0 8px 22px -8px rgba(13, 122, 79, .8);
-}
+.btn--accent { background: var(--accent); color: var(--on-accent); font-weight: 800; }
 
 .btn--ghost {
-  --btn-bg: transparent;
-  --btn-fg: var(--ink);
-  --btn-bd: var(--line-2);
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--line-2);
 }
-.btn--ghost:hover:not(:disabled) {
-  --btn-bg: var(--green-50);
-  --btn-bd: var(--green-300);
-  --btn-fg: var(--green-800);
-}
+.btn--ghost:hover:not(:disabled) { background: var(--surface); }
 
-.btn--soft {
-  --btn-bg: var(--green-50);
-  --btn-fg: var(--green-800);
-  --btn-bd: var(--green-100);
-}
-.btn--soft:hover:not(:disabled) {
-  --btn-bg: var(--green-100);
-  --btn-bd: var(--green-200);
-}
+.btn--soft { background: var(--surface-2); color: var(--ink); }
+.btn--soft:hover:not(:disabled) { background: var(--surface-3); }
 
-.btn--lg { padding: 16px 34px; font-size: 17px; }
-.btn--sm { padding: 8px 15px; font-size: 14px; }
+.btn--lg { padding: 18px 30px; font-size: 17px; }
+.btn--sm { padding: 10px 18px; font-size: 14.5px; }
 .btn--block { width: 100%; }
 
 /* --------------------------------------------------------------------------
-   Campos de formulario
+   Campos
    -------------------------------------------------------------------------- */
 
 .field { display: block; }
 
 .field__label {
   display: block;
-  font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   color: var(--ink-2);
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 
-.input,
-.textarea,
-.select {
+.input, .textarea, .select {
   width: 100%;
-  padding: 13px 16px;
-  border: 1.5px solid var(--line-2);
-  border-radius: var(--radius);
-  background: var(--paper);
+  padding: 16px 18px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
   color: var(--ink);
-  font-size: 16px;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  font-size: 16.5px;
+  font-weight: 500;
+  transition: border-color .15s ease, background-color .15s ease;
 }
 
-.textarea {
-  min-height: 180px;
-  resize: vertical;
-  line-height: 1.6;
-}
+.textarea { min-height: 150px; resize: vertical; line-height: 1.6; }
 
 .select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236d8175' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7588' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 18px;
-  padding-right: 42px;
+  background-position: right 16px center;
+  background-size: 19px;
+  padding-right: 46px;
   cursor: pointer;
 }
 
-.input:focus,
-.textarea:focus,
-.select:focus {
+.input:focus, .textarea:focus, .select:focus {
   outline: none;
-  border-color: var(--green-500);
-  box-shadow: 0 0 0 4px var(--green-100);
+  border-color: var(--accent);
+  background: var(--surface-2);
 }
 
-.input::placeholder,
-.textarea::placeholder { color: #a6b5ac; }
+.input::placeholder, .textarea::placeholder { color: var(--ink-3); }
 
 /* --------------------------------------------------------------------------
-   Tarjetas, chips y estados
+   Fila con icono de color: el patrón que se repite en toda la app
    -------------------------------------------------------------------------- */
 
-.card {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+.row-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+  transition: transform .12s ease, background-color .15s ease, box-shadow .15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
+
+.row-card:active { transform: scale(.985); }
+
+.row-card.is-on {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.row-card__label { font-weight: 700; font-size: 17px; letter-spacing: -0.015em; }
+.row-card__sub { display: block; font-weight: 500; font-size: 14px; color: var(--ink-3); margin-top: 2px; }
+.row-card__body { flex: 1; min-width: 0; }
+
+/* Un SVG sin ancho declarado se dibuja a 300x150 por defecto: la flecha de
+   la derecha necesita su tamaño explícito. */
+.row-card__go { color: var(--ink-3); flex: none; display: grid; }
+.row-card__go svg { width: 20px; height: 20px; }
+
+/* El icono va en una placa del color del elemento */
+.tile {
+  width: 42px; height: 42px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--tile, var(--accent));
+  background: color-mix(in srgb, var(--tile, var(--accent)) 16%, transparent);
+}
+.tile svg { width: 21px; height: 21px; stroke-width: 2.1; }
+
+.tile--sm { width: 34px; height: 34px; border-radius: 11px; }
+.tile--sm svg { width: 17px; height: 17px; }
+.tile--lg { width: 54px; height: 54px; border-radius: 17px; }
+.tile--lg svg { width: 26px; height: 26px; }
+
+/* Colores por elemento */
+.t-violet { --tile: var(--c-violet); }
+.t-blue   { --tile: var(--c-blue); }
+.t-green  { --tile: var(--c-green); }
+.t-coral  { --tile: var(--c-coral); }
+.t-pink   { --tile: var(--c-pink); }
+.t-amber  { --tile: var(--c-amber); }
+.t-cyan   { --tile: var(--c-cyan); }
+.t-lime   { --tile: var(--c-lime); }
+
+/* --------------------------------------------------------------------------
+   Barra de progreso del onboarding
+   -------------------------------------------------------------------------- */
+
+.progress {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  flex: 1;
+}
+
+.progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width .45s cubic-bezier(.65, 0, .35, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Bocadillo: la app pregunta, no el formulario
+   -------------------------------------------------------------------------- */
+
+.bubble {
+  position: relative;
+  display: inline-block;
+  padding: 18px 22px;
+  border-radius: 22px;
+  background: var(--surface-2);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  animation: bubble-in .38s cubic-bezier(.34, 1.4, .64, 1) both;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 30px;
+  bottom: -11px;
+  width: 22px; height: 12px;
+  background: var(--surface-2);
+  clip-path: polygon(0 0, 100% 0, 28% 100%);
+}
+
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(10px) scale(.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Etiquetas y píldoras
+   -------------------------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.pill svg { width: 14px; height: 14px; }
+.pill--accent { background: var(--accent-soft); color: var(--accent); }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 8px 7px 15px;
+  gap: 9px;
+  padding: 10px 10px 10px 16px;
   border-radius: 999px;
-  background: var(--green-50);
-  border: 1px solid var(--green-100);
-  color: var(--green-800);
-  font-weight: 500;
-  font-size: 14.5px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .chip__remove {
-  width: 22px; height: 22px;
+  width: 24px; height: 24px;
   display: grid;
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: var(--green-100);
-  color: var(--green-800);
+  background: var(--surface-3);
+  color: var(--ink-2);
   cursor: pointer;
-  line-height: 1;
-  transition: background-color .15s ease, color .15s ease;
 }
-.chip__remove:hover { background: var(--green-600); color: #fff; }
+.chip__remove:hover { background: var(--danger); color: #fff; }
 .chip__remove svg { width: 12px; height: 12px; }
 
-.tag {
-  display: inline-block;
-  padding: 4px 11px;
-  border-radius: 999px;
-  background: var(--green-50);
-  border: 1px solid var(--green-100);
-  color: var(--green-800);
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: .01em;
-}
+/* --------------------------------------------------------------------------
+   Avisos
+   -------------------------------------------------------------------------- */
 
-.empty {
-  text-align: center;
-  padding: 54px 28px;
-  border: 1.5px dashed var(--line-2);
-  border-radius: var(--radius-lg);
-  background: var(--paper-2);
-}
-
-.empty__icon {
-  width: 52px; height: 52px;
-  margin: 0 auto 18px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: var(--green-50);
-  color: var(--green-600);
-  border: 1px solid var(--green-100);
-}
-.empty__icon svg { width: 25px; height: 25px; }
-
-.empty__title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 18px;
-  margin-bottom: 6px;
-}
-
-.empty__text {
-  color: var(--ink-3);
-  font-size: 15px;
-  max-width: 380px;
-  margin: 0 auto 22px;
-}
-.empty__text:last-child { margin-bottom: 0; }
-
-/* Mensajes de error / aviso */
 .alert {
   display: flex;
-  gap: 11px;
-  padding: 13px 16px;
-  border-radius: var(--radius);
-  font-size: 14.5px;
+  gap: 12px;
+  padding: 15px 17px;
+  border-radius: var(--r);
+  font-size: 15px;
   line-height: 1.5;
-  border: 1px solid;
+  font-weight: 500;
 }
-.alert svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
-.alert--error { background: #fdf1f0; border-color: #f3d3d0; color: #8c1d18; }
-.alert--info  { background: var(--green-50); border-color: var(--green-100); color: var(--green-800); }
+.alert svg { width: 19px; height: 19px; flex: none; margin-top: 2px; }
+.alert--error { background: rgba(255, 91, 91, .12); color: #FF9C9C; }
+.alert--info  { background: var(--accent-soft); color: var(--accent); }
 
-/* Cargando */
+/* --------------------------------------------------------------------------
+   Carga
+   -------------------------------------------------------------------------- */
+
 .spinner {
-  width: 17px; height: 17px;
-  border: 2.2px solid currentColor;
+  width: 18px; height: 18px;
+  border: 2.4px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: spin .7s linear infinite;
@@ -360,22 +425,44 @@ a { color: var(--green-700); }
 .loading-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   color: var(--ink-3);
   font-size: 15px;
-  padding: 22px 0;
+  font-weight: 600;
+  padding: 26px 0;
 }
 
-/* Pantalla de carga inicial */
 .boot {
   position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  background: var(--paper);
-  z-index: 100;
+  background: var(--bg);
+  z-index: 200;
 }
-.boot__inner { display: flex; align-items: center; gap: 12px; color: var(--ink-3); }
+.boot__inner { display: flex; align-items: center; gap: 13px; color: var(--ink-3); font-weight: 600; }
+
+/* --------------------------------------------------------------------------
+   Entradas escalonadas: lo que da sensación de "está bien hecho"
+   -------------------------------------------------------------------------- */
+
+.stagger > * {
+  animation: rise .42s cubic-bezier(.22, 1, .36, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: .03s; }
+.stagger > *:nth-child(2) { animation-delay: .07s; }
+.stagger > *:nth-child(3) { animation-delay: .11s; }
+.stagger > *:nth-child(4) { animation-delay: .15s; }
+.stagger > *:nth-child(5) { animation-delay: .19s; }
+.stagger > *:nth-child(6) { animation-delay: .23s; }
+.stagger > *:nth-child(7) { animation-delay: .27s; }
+.stagger > *:nth-child(8) { animation-delay: .31s; }
+.stagger > *:nth-child(n+9) { animation-delay: .35s; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

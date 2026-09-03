@@ -54,16 +54,16 @@ Studdy.views.writing = (function () {
         '</div>';
     } else {
       html += '<div class="note-list">' + docs.map(function (d) {
-        var color = d.subject_id ? Studdy.app.subjectColor(d.subject_id) : 'sc-3';
+        var color = d.subject_id ? Studdy.app.subjectColor(d.subject_id) : 't-violet';
         return '<a class="note-card ' + color + '" href="#/trabajos/' + d.id + '">' +
-          '<span class="note-card__spine"></span>' +
+          '<span class="tile">' + Studdy.icons.lapiz + '</span>' +
           '<span class="note-card__body">' +
             (d.subject_id
               ? '<span class="note-card__subject">' +
                   Studdy.escapeHtml(Studdy.app.subjectName(d.subject_id)) + '</span>'
               : '') +
             '<span class="note-card__title">' + Studdy.escapeHtml(d.title) + '</span>' +
-            '<span class="note-card__meta"><span class="pill">Editado ' +
+            '<span class="note-card__meta"><span class="tag">Editado ' +
               Studdy.formatDate(d.updated_at) + '</span></span>' +
           '</span></a>';
       }).join('') + '</div>';

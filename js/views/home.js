@@ -1,9 +1,7 @@
 /* ==========================================================================
    Inicio.
-
-   Lo primero que se ve: qué tienes encima, dónde lo dejaste, cuánto llevas
-   y todo lo que puedes hacer. Los números salen de la base de datos; ninguno
-   es inventado.
+   Qué tienes encima, dónde lo dejaste, cuánto llevas y qué puedes hacer.
+   Todos los números salen de la base de datos.
    ========================================================================== */
 
 Studdy.views.home = (function () {
@@ -14,7 +12,7 @@ Studdy.views.home = (function () {
 
     vista.innerHTML =
       saludo(s.profile) +
-      accesosRapidos(s) +
+      '<div class="quick stagger">' + accesos() + '</div>' +
       '<div id="agenda-slot"></div>' +
       continuar() +
       '<div id="repaso-slot"></div>' +
@@ -22,8 +20,6 @@ Studdy.views.home = (function () {
       herramientas() +
       asignaturas(s);
 
-    // Agenda y repaso se piden aparte para que el inicio pinte ya, sin
-    // esperar a dos consultas más.
     pintarAgenda(vista);
     pintarRepaso(vista);
   }
@@ -32,10 +28,12 @@ Studdy.views.home = (function () {
 
   function saludo(perfil) {
     return (
-      '<div class="topbar">' +
-        '<div><span class="hello">' + franja() +
+      '<div class="appbar">' +
+        '<div>' +
+          '<span class="hello">' + franja() + '</span>' +
           '<span class="hello__name">' + Studdy.escapeHtml(perfil.name) + '</span>' +
-        '</span></div>' +
+        '</div>' +
+        '<div class="appbar__spacer"></div>' +
         '<a class="avatar" href="#/perfil" aria-label="Tu perfil">' +
           Studdy.escapeHtml(Studdy.app.initials(perfil.name)) +
         '</a>' +
@@ -53,27 +51,20 @@ Studdy.views.home = (function () {
 
   // ------------------------------------------------------------------------
 
-  function accesosRapidos() {
-    return (
-      '<div class="quick">' +
-        item('#/apuntes/subir', Studdy.icons.subir, 'Subir apunte', true) +
-        item('#/ejercicios', Studdy.icons.diana, 'Resolver ejercicio', false) +
-        item('#/chat', Studdy.icons.chat, 'Preguntar', false) +
-      '</div>'
-    );
+  function accesos() {
+    return [
+      ['#/apuntes/subir', 'subir', 'Subir apunte', true, ''],
+      ['#/ejercicios', 'diana', 'Resolver', false, 't-blue'],
+      ['#/chat', 'chispa', 'Preguntar', false, 't-violet'],
+    ].map(function (a) {
+      return '<a class="quick__item' + (a[3] ? ' quick__item--accent' : '') + ' ' + a[4] +
+        '" href="' + a[0] + '">' +
+        '<span class="tile">' + Studdy.icons[a[1]] + '</span>' +
+        '<span class="quick__label">' + Studdy.escapeHtml(a[2]) + '</span>' +
+      '</a>';
+    }).join('');
   }
 
-  function item(href, icono, etiqueta, acento) {
-    return (
-      '<a class="quick__item' + (acento ? ' quick__item--accent' : '') + '" href="' + href + '">' +
-        '<span class="quick__icon">' + icono + '</span>' +
-        '<span class="quick__label">' + Studdy.escapeHtml(etiqueta) + '</span>' +
-      '</a>'
-    );
-  }
-
-  // ------------------------------------------------------------------------
-  // Lo que tienes encima
   // ------------------------------------------------------------------------
 
   function pintarAgenda(vista) {
@@ -90,31 +81,31 @@ Studdy.views.home = (function () {
 
         slot.innerHTML =
           '<p class="section-title">Lo que tienes cerca</p>' +
+          '<div class="stagger">' +
           proximos.map(function (e) {
             var d = Studdy.views.agenda.dias(e.date);
             var asignatura = e.subject_id ? Studdy.app.subjectName(e.subject_id) : '';
             return (
               '<div class="event event--' + e.kind + '">' +
+                '<span class="tile tile--sm">' +
+                  Studdy.icons[e.kind === 'entrega' ? 'apunte' : 'examen'] + '</span>' +
                 '<div class="event__body">' +
                   '<div class="event__kind">' +
                     (e.kind === 'examen' ? 'Examen' : e.kind === 'entrega' ? 'Entrega' : 'Otro') +
                   '</div>' +
                   '<div class="event__title">' + Studdy.escapeHtml(e.title) +
                     '<span class="countdown">' +
-                      (d === 0 ? 'hoy' : d === 1 ? 'mañana' : 'en ' + d + 'd') +
+                      (d === 0 ? 'hoy' : d === 1 ? 'mañana' : d + 'd') +
                     '</span></div>' +
-                  (asignatura
-                    ? '<div class="event__meta">' + Studdy.escapeHtml(asignatura) + '</div>'
-                    : '') +
+                  (asignatura ? '<div class="event__meta">' + Studdy.escapeHtml(asignatura) + '</div>' : '') +
                 '</div>' +
               '</div>'
             );
           }).join('') +
-          '<a class="btn btn--ghost btn--sm" href="#/agenda">Ver toda la agenda</a>';
+          '</div>' +
+          '<a class="btn btn--soft btn--sm" href="#/agenda">Ver toda la agenda</a>';
       })
-      .catch(function () {
-        // Sin la tabla de agenda el inicio funciona igual: no se pinta nada.
-      });
+      .catch(function () { /* sin tabla de agenda, no se pinta nada */ });
   }
 
   // ------------------------------------------------------------------------
@@ -134,6 +125,7 @@ Studdy.views.home = (function () {
     return (
       '<p class="section-title">Continuar</p>' +
       '<a class="resume ' + Studdy.app.subjectColor(apunte.subject_id) + '" href="#/n/' + apunte.id + '">' +
+        '<span class="tile">' + Studdy.icons.apunte + '</span>' +
         '<span class="resume__body">' +
           '<span class="resume__kicker">' +
             Studdy.escapeHtml(Studdy.app.subjectName(apunte.subject_id)) + '</span>' +
@@ -156,10 +148,10 @@ Studdy.views.home = (function () {
     Studdy.views.review.cargar()
       .then(function (datos) {
         if (!datos.cola.length) return;
-
         slot.innerHTML =
           '<p class="section-title">Toca repasar</p>' +
-          '<a class="resume" href="#/repasar" style="border-left-color:var(--green-600)">' +
+          '<a class="resume t-green" href="#/repasar">' +
+            '<span class="tile">' + Studdy.icons.flashcards + '</span>' +
             '<span class="resume__body">' +
               '<span class="resume__kicker">Repaso de hoy</span>' +
               '<span class="resume__title">' + datos.cola.length +
@@ -169,9 +161,7 @@ Studdy.views.home = (function () {
             '<span class="resume__go">' + Studdy.icons.flecha + '</span>' +
           '</a>';
       })
-      .catch(function () {
-        // Sin la tabla de repaso, esta tarjeta simplemente no aparece.
-      });
+      .catch(function () { /* sin tabla de repaso, no se pinta */ });
   }
 
   // ------------------------------------------------------------------------
@@ -183,8 +173,8 @@ Studdy.views.home = (function () {
         '<div class="empty">' +
           '<div class="empty__icon">' + Studdy.icons.apunte + '</div>' +
           '<p class="empty__title">Aún no tienes apuntes</p>' +
-          '<p class="empty__text">Sube un PDF o pega el texto de un tema. A partir de ahí ' +
-            'salen su esquema, sus flashcards, un examen y una presentación.</p>' +
+          '<p class="empty__text">Sube un PDF o pega el texto de un tema. De ahí salen ' +
+            'su esquema, sus flashcards, un examen y una presentación.</p>' +
           '<a class="btn btn--primary" href="#/apuntes/subir">Subir tu primer apunte</a>' +
         '</div>'
       );
@@ -198,20 +188,20 @@ Studdy.views.home = (function () {
       return acc;
     }, { flashcards: 0, exams: 0, presentations: 0 });
 
-    var html = '<p class="section-title">Tu progreso</p><div class="stats">';
+    var html = '<p class="section-title">Tu progreso</p><div class="stats stagger">';
 
     var intentos = s.attempts;
     if (intentos && intentos.length) {
-      var aciertos = intentos.reduce(function (a, i) { return a + (i.score || 0); }, 0);
-      var preguntas = intentos.reduce(function (a, i) { return a + (i.total || 0); }, 0);
-      var pct = preguntas ? Math.round((aciertos / preguntas) * 100) : 0;
+      var ac = intentos.reduce(function (a, i) { return a + (i.score || 0); }, 0);
+      var to = intentos.reduce(function (a, i) { return a + (i.total || 0); }, 0);
+      var pct = to ? Math.round((ac / to) * 100) : 0;
 
       html +=
         '<div class="stat stat--wide">' +
           '<span class="ring" style="--pct:' + pct + '">' +
             '<span class="ring__inner">' + pct + '%</span></span>' +
           '<div>' +
-            '<div class="stat__value" style="font-size:20px">' + aciertos + ' de ' + preguntas + '</div>' +
+            '<div class="stat__value" style="font-size:22px">' + ac + ' de ' + to + '</div>' +
             '<div class="stat__label">preguntas tipo test acertadas en ' +
               intentos.length + (intentos.length === 1 ? ' examen' : ' exámenes') + '</div>' +
           '</div>' +
@@ -237,19 +227,19 @@ Studdy.views.home = (function () {
 
   function herramientas() {
     var h = [
-      ['#/agenda', Studdy.icons.reloj, 'Agenda', 'Exámenes y entregas', 'sc-2'],
-      ['#/ejercicios', Studdy.icons.diana, 'Ejercicios', 'Resueltos paso a paso', 'sc-1'],
-      ['#/trabajos', Studdy.icons.apunte, 'Trabajos', 'Guion, borrador y revisión', 'sc-3'],
-      ['#/tema', Studdy.icons.presentacion, 'Presentación', 'De un tema suelto', 'sc-4'],
+      ['#/agenda', 'reloj', 'Agenda', 'Exámenes y entregas', 't-coral'],
+      ['#/ejercicios', 'diana', 'Ejercicios', 'Resueltos paso a paso', 't-blue'],
+      ['#/trabajos', 'lapiz', 'Trabajos', 'Guion y revisión', 't-violet'],
+      ['#/tema', 'presentacion', 'Presentación', 'De un tema suelto', 't-amber'],
     ];
 
-    return '<p class="section-title">Herramientas</p><div class="tool-grid">' +
+    return '<p class="section-title">Herramientas</p><div class="tool-grid stagger">' +
       h.map(function (x) {
         return '<a class="tool-card ' + x[4] + '" href="' + x[0] + '">' +
-          '<span class="tool-card__icon">' + x[1] + '</span>' +
+          '<span class="tile">' + Studdy.icons[x[1]] + '</span>' +
           '<span class="tool-card__title">' + Studdy.escapeHtml(x[2]) + '</span>' +
           '<span class="tool-card__text">' + Studdy.escapeHtml(x[3]) + '</span>' +
-          '</a>';
+        '</a>';
       }).join('') + '</div>';
   }
 
@@ -259,7 +249,7 @@ Studdy.views.home = (function () {
     if (!s.subjects.length) return '';
 
     return (
-      '<p class="section-title">Tus asignaturas</p><div class="subject-grid">' +
+      '<p class="section-title">Tus asignaturas</p><div class="subject-grid stagger">' +
       s.subjects.map(function (a) {
         var n = Studdy.app.notesOfSubject(a.id).length;
         return '<a class="subject-tile ' + Studdy.app.subjectColor(a.id) + '" ' +

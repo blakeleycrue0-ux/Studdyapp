@@ -207,13 +207,18 @@ Studdy.app = (function () {
     return s ? s.name : 'Sin asignatura';
   }
 
+  var COLORES = ['t-violet', 't-blue', 't-green', 't-coral', 't-pink', 't-amber', 't-cyan', 't-lime'];
+
   // Color estable por asignatura: mismo id, mismo color siempre.
   function subjectColor(id) {
     var suma = 0;
     var texto = String(id || '');
     for (var i = 0; i < texto.length; i++) suma = (suma * 31 + texto.charCodeAt(i)) >>> 0;
-    return 'sc-' + (suma % 8);
+    return COLORES[suma % COLORES.length];
   }
+
+  // Para listas donde cada fila lleva un color distinto por posición.
+  function colorAt(i) { return COLORES[i % COLORES.length]; }
 
   function notesOfSubject(subjectId) {
     return estado.notes.filter(function (n) { return n.subject_id === subjectId; });
@@ -281,15 +286,21 @@ Studdy.app = (function () {
   // ------------------------------------------------------------------------
 
   function volver(href, texto) {
-    return '<a class="back-link" href="' + href + '">' + Studdy.icons.atras +
-      Studdy.escapeHtml(texto) + '</a>';
+    return '<a class="back-link" href="' + href + '" aria-label="Volver a ' +
+      Studdy.escapeHtml(texto) + '">' + Studdy.icons.atras +
+      '<span>' + Studdy.escapeHtml(texto) + '</span></a>';
   }
 
   function cabecera(titulo, subtitulo, extra) {
-    return '<div class="topbar"><div>' +
-      '<h1 class="topbar__title">' + Studdy.escapeHtml(titulo) + '</h1>' +
-      (subtitulo ? '<p class="topbar__sub">' + Studdy.escapeHtml(subtitulo) + '</p>' : '') +
-      '</div>' + (extra || '') + '</div>';
+    return '<div class="topbar">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px">' +
+        '<div>' +
+          '<h1 class="topbar__title">' + Studdy.escapeHtml(titulo) + '</h1>' +
+          (subtitulo ? '<p class="topbar__sub">' + Studdy.escapeHtml(subtitulo) + '</p>' : '') +
+        '</div>' +
+        (extra || '') +
+      '</div>' +
+    '</div>';
   }
 
   return {
@@ -305,6 +316,7 @@ Studdy.app = (function () {
     findSubject: findSubject,
     subjectName: subjectName,
     subjectColor: subjectColor,
+    colorAt: colorAt,
     notesOfSubject: notesOfSubject,
     countsFor: countsFor,
     bumpCount: bumpCount,

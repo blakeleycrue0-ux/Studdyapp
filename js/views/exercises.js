@@ -232,16 +232,16 @@ Studdy.views.exercises = (function () {
 
     caja.innerHTML = '<p class="section-title">Ya resueltos</p><div class="note-list">' +
       out.data.map(function (e) {
-        var color = e.subject_id ? Studdy.app.subjectColor(e.subject_id) : 'sc-0';
+        var color = e.subject_id ? Studdy.app.subjectColor(e.subject_id) : 't-blue';
         return '<a class="note-card ' + color + '" href="#/ejercicios/' + e.id + '">' +
-          '<span class="note-card__spine"></span>' +
+          '<span class="tile">' + Studdy.icons.diana + '</span>' +
           '<span class="note-card__body">' +
             (e.subject_id
               ? '<span class="note-card__subject">' +
                   Studdy.escapeHtml(Studdy.app.subjectName(e.subject_id)) + '</span>'
               : '') +
             '<span class="note-card__title">' + Studdy.escapeHtml(recorta(e.prompt)) + '</span>' +
-            '<span class="note-card__meta"><span class="pill">' +
+            '<span class="note-card__meta"><span class="tag">' +
               Studdy.formatDate(e.created_at) + '</span></span>' +
           '</span></a>';
       }).join('') + '</div>';

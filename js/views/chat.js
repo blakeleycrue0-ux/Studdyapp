@@ -1,18 +1,18 @@
 /* ==========================================================================
    Chat.
-   Dos modos: general (pestaña de abajo) y sobre un apunte concreto (pestaña
-   del cuaderno). En el segundo se le pasa el contenido del apunte para que
-   responda sobre ese material.
 
-   El nivel, curso y asignaturas los añade la función serverless leyendo el
-   perfil del propio usuario. El historial vive en memoria durante la visita.
+   Pensado como un asistente de IA, no como una app de mensajería: lo que
+   escribes tú va en burbuja a la derecha, y lo que responde la IA va a texto
+   corrido y a todo el ancho, igual que en ChatGPT o Gemini.
+
+   Dos modos: general (pestaña de abajo) y sobre un apunte concreto (pestaña
+   del cuaderno). El nivel y las asignaturas los añade la función serverless
+   leyendo el perfil. El historial vive en memoria durante la visita.
    ========================================================================== */
 
 Studdy.views.chat = (function () {
   'use strict';
 
-  // clave -> [{role, content}]. 'global' para el chat general, el id del
-  // apunte para cada cuaderno.
   var historiales = {};
 
   function historial(clave) {
@@ -26,25 +26,20 @@ Studdy.views.chat = (function () {
     var perfil = Studdy.app.state.profile;
 
     vista.innerHTML =
-      Studdy.app.cabecera('Chat',
-        'Ya sabe que estás en ' + Studdy.app.describeLevel(perfil) + '.') +
+      '<div class="appbar">' +
+        '<div><h1 class="topbar__title">Chat</h1></div>' +
+        '<div class="appbar__spacer"></div>' +
+        '<a class="avatar" href="#/perfil">' +
+          Studdy.escapeHtml(Studdy.app.initials(perfil.name)) + '</a>' +
+      '</div>' +
       armazon('');
 
-    montar(vista, 'global', null, [
-      'Explícame un concepto que no entiendo',
-      'Hazme un resumen de un tema',
-      '¿Cómo me organizo para un examen?',
-    ]);
+    montar(vista, 'global', null);
   }
 
   function renderPanel(panel, apunte) {
     panel.innerHTML = armazon(' chat--embedded');
-
-    montar(panel, apunte.id, apunte, [
-      'Explícamelo más fácil',
-      'Ponme un ejemplo',
-      '¿Qué es lo más importante de esto?',
-    ]);
+    montar(panel, apunte.id, apunte);
   }
 
   // ------------------------------------------------------------------------
@@ -53,10 +48,12 @@ Studdy.views.chat = (function () {
     return (
       '<div class="chat' + clase + '">' +
         '<div class="chat__log" id="log"></div>' +
+        '<div class="chat__quick" id="quick"></div>' +
         '<div class="chat__composer">' +
-          '<textarea class="chat__input" id="input" rows="1" aria-label="Escribe tu mensaje"></textarea>' +
+          '<textarea class="chat__input" id="input" rows="1" ' +
+            'placeholder="Pregunta lo que sea…" aria-label="Escribe tu mensaje"></textarea>' +
           '<button class="chat__send" id="send" disabled aria-label="Enviar">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
             'stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>' +
           '</button>' +
         '</div>' +
@@ -64,17 +61,46 @@ Studdy.views.chat = (function () {
     );
   }
 
-  function montar(raiz, clave, apunte, sugerencias) {
+  // Atajos sobre el campo: escriben la pregunta por ti.
+  function atajos(apunte) {
+    return apunte
+      ? [
+          ['Explícamelo más fácil', 'chispa', 't-violet'],
+          ['Ponme un ejemplo', 'diana', 't-blue'],
+          ['¿Qué entra en el examen?', 'examen', 't-coral'],
+          ['Hazme un resumen corto', 'esquema', 't-green'],
+        ]
+      : [
+          ['Explícame un concepto', 'chispa', 't-violet'],
+          ['Ayúdame con un ejercicio', 'diana', 't-blue'],
+          ['Cómo estudio para un examen', 'examen', 't-coral'],
+          ['Resúmeme un tema', 'esquema', 't-green'],
+        ];
+  }
+
+  function montar(raiz, clave, apunte) {
     var log = Studdy.$('#log', raiz);
     var input = Studdy.$('#input', raiz);
     var enviar = Studdy.$('#send', raiz);
+    var quick = Studdy.$('#quick', raiz);
+
+    quick.innerHTML = atajos(apunte).map(function (a) {
+      return '<button type="button" class="' + a[2] + '" data-texto="' +
+        Studdy.escapeHtml(a[0]) + '">' + Studdy.icons[a[1]] +
+        Studdy.escapeHtml(a[0]) + '</button>';
+    }).join('');
+
+    quick.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-texto]');
+      if (b) mandar(b.dataset.texto);
+    });
 
     pintar();
 
     input.addEventListener('input', function () {
       enviar.disabled = !input.value.trim();
       input.style.height = 'auto';
-      input.style.height = Math.min(input.scrollHeight, 130) + 'px';
+      input.style.height = Math.min(input.scrollHeight, 140) + 'px';
     });
 
     input.addEventListener('keydown', function (e) {
@@ -89,24 +115,30 @@ Studdy.views.chat = (function () {
     });
 
     log.addEventListener('click', function (e) {
-      var sug = e.target.closest('.chat__suggestion');
-      if (sug) mandar(sug.textContent);
+      var s = e.target.closest('.chat__suggestion');
+      if (s) mandar(s.dataset.texto);
     });
 
     function pintar() {
       var mensajes = historial(clave);
 
       if (!mensajes.length) {
+        var nombre = Studdy.app.state.profile.name;
         log.innerHTML =
           '<div class="chat__intro">' +
-            '<div class="chat__intro-icon">' + Studdy.icons.chat + '</div>' +
-            '<p>' + (apunte
-              ? 'Pregúntame lo que quieras sobre este apunte.'
-              : 'Pregúntame lo que no entiendas. Respondo al nivel de tu curso.') + '</p>' +
-            '<div class="chat__suggestions">' +
-              sugerencias.map(function (t) {
-                return '<button class="chat__suggestion" type="button">' +
-                  Studdy.escapeHtml(t) + '</button>';
+            '<h2 class="chat__intro-title">Hola, <b>' + Studdy.escapeHtml(nombre) + '</b>.<br>' +
+              (apunte ? '¿Qué no te cuadra de este apunte?' : '¿Qué estudiamos hoy?') + '</h2>' +
+            '<p class="chat__intro-text">' +
+              (apunte
+                ? 'Tengo delante este apunte, pregúntame sobre él.'
+                : 'Respondo al nivel de tu curso, sin que tengas que explicármelo.') +
+            '</p>' +
+            '<div class="chat__suggestions stagger">' +
+              atajos(apunte).map(function (a) {
+                return '<button class="chat__suggestion ' + a[2] + '" type="button" ' +
+                  'data-texto="' + Studdy.escapeHtml(a[0]) + '">' +
+                  '<span class="tile tile--sm">' + Studdy.icons[a[1]] + '</span>' +
+                  Studdy.escapeHtml(a[0]) + '</button>';
               }).join('') +
             '</div>' +
           '</div>';
@@ -129,8 +161,9 @@ Studdy.views.chat = (function () {
       enviar.disabled = true;
 
       pintar();
+
       var pensando = burbuja(log, 'ai', '');
-      pensando.innerHTML = '<span class="spinner" style="vertical-align:-3px"></span>';
+      pensando.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
       abajo(log);
 
       var carga = { messages: historial(clave) };
@@ -140,13 +173,12 @@ Studdy.views.chat = (function () {
       }
 
       Studdy.ai('chat', carga)
-        .then(function (respuesta) {
-          historial(clave).push({ role: 'assistant', content: respuesta.reply });
+        .then(function (r) {
+          historial(clave).push({ role: 'assistant', content: r.reply });
           pintar();
         })
         .catch(function (err) {
-          // El turno que ha fallado no se queda guardado: si no, se
-          // reenviaría en cada intento posterior.
+          // El turno fallido no se guarda: si no, se reenviaría cada vez.
           historial(clave).pop();
           pintar();
           burbuja(log, 'error', err.message);

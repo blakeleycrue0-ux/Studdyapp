@@ -203,6 +203,16 @@
   // Pintado
   // ------------------------------------------------------------------------
 
+  function marca() {
+    return '<div class="auth__brand"><span class="brand">' +
+      '<span class="brand__mark">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+        'stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M22 9 12 4 2 9l10 5 10-5Z"/>' +
+        '<path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/></svg>' +
+      '</span>Studdy</span></div>';
+  }
+
   function pintar() {
     if (modo === 'olvidada') return pintarOlvidada();
     if (modo === 'nueva') return pintarNueva();
@@ -210,8 +220,9 @@
     var creando = modo === 'crear';
 
     panel.innerHTML =
-      '<h1 class="panel__title">' + (creando ? 'Crea tu cuenta' : 'Entra en Studdy') + '</h1>' +
-      '<p class="panel__lead">' +
+      marca() +
+      '<h1 class="auth__title">' + (creando ? 'Crea tu cuenta' : 'Entra en Studdy') + '</h1>' +
+      '<p class="auth__lead">' +
         (creando
           ? 'Para que tus apuntes te sigan en cualquier dispositivo.'
           : 'Con tu correo o con Google.') +
@@ -354,8 +365,9 @@
 
   function pintarOlvidada() {
     panel.innerHTML =
-      '<h1 class="panel__title">Recuperar contraseña</h1>' +
-      '<p class="panel__lead">Te mandamos un enlace para poner una nueva.</p>' +
+      marca() +
+      '<h1 class="auth__title">Recuperar contraseña</h1>' +
+      '<p class="auth__lead">Te mandamos un enlace para poner una nueva.</p>' +
       '<div class="panel__error" id="error"></div>' +
       '<div class="auth-fields">' +
         '<label class="field">' +
@@ -384,8 +396,9 @@
       Studdy.resetPassword(email.value.trim())
         .then(function () {
           panel.innerHTML =
-            '<h1 class="panel__title">Mira tu correo</h1>' +
-            '<p class="panel__lead">Si hay una cuenta con <b>' +
+            marca() +
+            '<h1 class="auth__title">Mira tu correo</h1>' +
+            '<p class="auth__lead">Si hay una cuenta con <b>' +
               Studdy.escapeHtml(email.value.trim()) + '</b>, te acaba de llegar un enlace ' +
               'para poner una contraseña nueva.</p>' +
             '<a class="btn btn--ghost btn--block" href="login.html">Volver</a>';
@@ -401,8 +414,9 @@
 
   function pintarNueva() {
     panel.innerHTML =
-      '<h1 class="panel__title">Nueva contraseña</h1>' +
-      '<p class="panel__lead">Escribe la que quieras usar a partir de ahora.</p>' +
+      marca() +
+      '<h1 class="auth__title">Nueva contraseña</h1>' +
+      '<p class="auth__lead">Escribe la que quieras usar a partir de ahora.</p>' +
       '<div class="panel__error" id="error"></div>' +
       '<div class="auth-fields">' +
         '<label class="field">' +
@@ -445,8 +459,9 @@
 
   function confirmacion(correo) {
     panel.innerHTML =
-      '<h1 class="panel__title">Confirma tu correo</h1>' +
-      '<p class="panel__lead">Te hemos enviado un enlace a <b>' +
+      marca() +
+      '<h1 class="auth__title">Confirma tu correo</h1>' +
+      '<p class="auth__lead">Te hemos enviado un enlace a <b>' +
         Studdy.escapeHtml(correo) + '</b>. Ábrelo y ya estarás dentro.</p>' +
       '<p class="auth-note">Si no aparece, mira en spam.</p>' +
       '<a class="btn btn--ghost btn--block" style="margin-top:18px" href="login.html">Volver</a>';

@@ -55,7 +55,7 @@ Studdy.views.notes = (function () {
       return;
     }
 
-    html += '<div class="note-list">' + apuntes.map(tarjeta).join('') + '</div>';
+    html += '<div class="note-list stagger">' + apuntes.map(tarjeta).join('') + '</div>';
     vista.innerHTML = html;
   }
 
@@ -64,19 +64,17 @@ Studdy.views.notes = (function () {
     var c = app.countsFor(apunte.id);
 
     var etiquetas = [
-      c.summary ? pill(Studdy.icons.esquema, 'Esquema') : null,
-      c.flashcards ? pill(Studdy.icons.flashcards, c.flashcards + ' tarjetas') : null,
-      c.exams ? pill(Studdy.icons.examen, 'Examen') : null,
-      c.presentations ? pill(Studdy.icons.presentacion, 'Presentación') : null,
+      c.summary ? tag(Studdy.icons.esquema, 'Esquema') : null,
+      c.flashcards ? tag(Studdy.icons.flashcards, c.flashcards + ' tarjetas') : null,
+      c.exams ? tag(Studdy.icons.examen, 'Examen') : null,
+      c.presentations ? tag(Studdy.icons.presentacion, 'Presentación') : null,
     ].filter(Boolean);
 
-    if (!etiquetas.length) {
-      etiquetas = ['<span class="pill">Sin generar nada aún</span>'];
-    }
+    if (!etiquetas.length) etiquetas = ['<span class="tag">Sin generar nada aún</span>'];
 
     return (
       '<a class="note-card ' + app.subjectColor(apunte.subject_id) + '" href="#/n/' + apunte.id + '">' +
-        '<span class="note-card__spine"></span>' +
+        '<span class="tile">' + Studdy.icons.apunte + '</span>' +
         '<span class="note-card__body">' +
           '<span class="note-card__subject">' +
             Studdy.escapeHtml(app.subjectName(apunte.subject_id)) + '</span>' +
@@ -88,8 +86,8 @@ Studdy.views.notes = (function () {
     );
   }
 
-  function pill(icono, texto) {
-    return '<span class="pill pill--on">' + icono + Studdy.escapeHtml(texto) + '</span>';
+  function tag(icono, texto) {
+    return '<span class="tag tag--on">' + icono + Studdy.escapeHtml(texto) + '</span>';
   }
 
   // ------------------------------------------------------------------------

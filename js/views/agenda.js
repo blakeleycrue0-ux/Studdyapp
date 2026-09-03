@@ -94,6 +94,8 @@ Studdy.views.agenda = (function () {
         '<button class="event__check" data-hecho="' + e.id + '" aria-label="Marcar como hecho">' +
           Studdy.icons.ok +
         '</button>' +
+        '<span class="tile tile--sm">' +
+          Studdy.icons[e.kind === 'entrega' ? 'apunte' : 'examen'] + '</span>' +
         '<div class="event__body">' +
           '<div class="event__kind">' + tipoEtiqueta(e.kind) + '</div>' +
           '<div class="event__title">' + Studdy.escapeHtml(e.title) + cuenta + '</div>' +

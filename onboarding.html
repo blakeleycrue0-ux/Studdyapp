@@ -2,13 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Configura tu perfil — Studdy</title>
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A0D14">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/forms.css">
 </head>
@@ -18,129 +19,29 @@
   <div class="boot__inner"><span class="spinner"></span><span>Cargando…</span></div>
 </div>
 
-<header class="screen__header">
-  <div class="wrap">
-    <span class="brand">
-      <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 9 12 4 2 9l10 5 10-5Z"/>
-          <path d="M6 11.5V17c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-5.5"/>
-        </svg>
-      </span>
-      Studdy
-    </span>
+<div class="flow">
+  <div class="flow__top">
+    <button class="flow__back" id="back" type="button" aria-label="Atrás" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+           stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    </button>
+    <div class="progress"><div class="progress__fill" id="fill" style="width:0%"></div></div>
   </div>
-</header>
 
-<main class="screen__main">
-  <div class="wrap" style="display:flex;justify-content:center">
-    <div class="panel panel--wide">
+  <div class="flow__body" id="body"></div>
 
-      <div class="progress">
-        <div class="progress__bar"><div class="progress__fill" id="progress-fill"></div></div>
-        <span class="progress__label" id="progress-label">Paso 1 de 4</span>
-      </div>
-
-      <div class="panel__error" id="error"></div>
-
-      <!-- ---------------------------------------------------------------
-           Paso 1 — nombre
-           --------------------------------------------------------------- -->
-      <section class="step-panel is-active" data-step="1">
-        <h1 class="step-panel__question">¿Cómo te llamas?</h1>
-        <p class="step-panel__hint">Solo para que la app te hable a ti.</p>
-
-        <label class="field">
-          <span class="visually-hidden">Tu nombre</span>
-          <input class="input" type="text" id="name" autocomplete="given-name" spellcheck="false">
-        </label>
-      </section>
-
-      <!-- ---------------------------------------------------------------
-           Paso 2 — nivel
-           --------------------------------------------------------------- -->
-      <section class="step-panel" data-step="2">
-        <h1 class="step-panel__question">¿Qué estás estudiando?</h1>
-        <p class="step-panel__hint">Es lo que marca la dificultad de todo lo que genere la IA.</p>
-
-        <div class="options options--2col" id="levels">
-          <label class="option">
-            <input type="radio" name="level" value="ESO">
-            <span class="option__box">
-              <span class="option__dot"></span>
-              <span class="option__text">ESO<span class="option__sub">Educación Secundaria Obligatoria</span></span>
-            </span>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="level" value="Bachillerato">
-            <span class="option__box">
-              <span class="option__dot"></span>
-              <span class="option__text">Bachillerato<span class="option__sub">1º y 2º, con rama</span></span>
-            </span>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="level" value="FP">
-            <span class="option__box">
-              <span class="option__dot"></span>
-              <span class="option__text">FP<span class="option__sub">Formación Profesional</span></span>
-            </span>
-          </label>
-
-          <label class="option">
-            <input type="radio" name="level" value="Universidad">
-            <span class="option__box">
-              <span class="option__dot"></span>
-              <span class="option__text">Universidad<span class="option__sub">Grado o carrera</span></span>
-            </span>
-          </label>
-        </div>
-      </section>
-
-      <!-- ---------------------------------------------------------------
-           Paso 3 — depende del nivel (se construye en JS)
-           --------------------------------------------------------------- -->
-      <section class="step-panel" data-step="3">
-        <h1 class="step-panel__question" id="step3-question">Concreta tu curso</h1>
-        <p class="step-panel__hint" id="step3-hint"></p>
-        <div class="field-stack" id="step3-fields"></div>
-      </section>
-
-      <!-- ---------------------------------------------------------------
-           Paso 4 — asignaturas
-           --------------------------------------------------------------- -->
-      <section class="step-panel" data-step="4">
-        <h1 class="step-panel__question">Añade tus asignaturas o módulos</h1>
-        <p class="step-panel__hint">Las que estés dando este curso. Podrás subir apuntes dentro de cada una.</p>
-
-        <div class="subject-empty" id="subjects-empty">Todavía no has añadido ninguna asignatura.</div>
-        <div class="subject-list" id="subjects-list"></div>
-
-        <div class="subject-adder" id="subject-adder">
-          <input class="input" type="text" id="subject-input" spellcheck="false" maxlength="80">
-          <button class="btn btn--primary" type="button" id="subject-confirm">Añadir</button>
-        </div>
-
-        <button class="btn btn--soft" type="button" id="subject-open">+ Añadir asignatura</button>
-      </section>
-
-      <!-- ---------------------------------------------------------------
-           Navegación
-           --------------------------------------------------------------- -->
-      <div class="step-nav">
-        <button class="btn btn--ghost" type="button" id="back" hidden>Atrás</button>
-        <span class="step-nav__spacer"></span>
-        <button class="btn btn--primary" type="button" id="next" disabled>Siguiente</button>
-        <button class="btn btn--primary" type="button" id="finish" disabled hidden>Finalizar</button>
-      </div>
-
-    </div>
+  <div class="flow__foot">
+    <div id="error"></div>
+    <p class="flow__note" id="note" hidden></p>
+    <button class="btn btn--primary btn--lg btn--block" id="next" type="button" disabled>
+      Continuar
+    </button>
   </div>
-</main>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/core.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/data/fp.js"></script>
 <script src="js/onboarding.js"></script>
 </body>

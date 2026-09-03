@@ -1,458 +1,457 @@
 /* ==========================================================================
-   Onboarding en 4 pasos.
+   Onboarding: una pregunta por pantalla.
 
-   Regla que gobierna todo este archivo: ningún campo arranca con valor. No hay
-   placeholders que parezcan datos, ni opciones preseleccionadas, ni listas con
-   ejemplos. El estado empieza literalmente vacío y solo se llena con lo que
-   escribe el usuario.
+   Regla que gobierna todo el archivo: ningún campo arranca con valor. No hay
+   placeholders que parezcan datos, ni opciones preseleccionadas, ni ejemplos.
+   El estado empieza vacío y solo se llena con lo que responde el usuario.
+
+   Las pantallas que se muestran dependen del nivel: quien va a FP no ve las
+   de Bachillerato y al revés.
    ========================================================================== */
 
 (function () {
   'use strict';
 
-  // Las familias y los ciclos salen del catálogo de js/data/fp.js
-  var FAMILIAS_FP = Studdy.fp.familias;
-
-  var RAMAS_BACHILLERATO = ['Ciencias', 'Humanidades y CCSS', 'Artes'];
-
-  // Estado: todo vacío al empezar.
   var estado = {
-    name: '',
-    level: '',
-    course: '',
-    branch: '',
-    fp_grade: '',
-    fp_family: '',
-    fp_cycle: '',
-    university_degree: '',
-    subjects: [],
+    name: '', level: '', course: '', branch: '',
+    fp_grade: '', fp_family: '', fp_cycle: '',
+    university_degree: '', subjects: [],
   };
 
-  var pasoActual = 1;
-  var TOTAL = 4;
+  var indice = 0;
+  var yendoAtras = false;
 
   var el = {
     boot: Studdy.$('#boot'),
-    error: Studdy.$('#error'),
-    fill: Studdy.$('#progress-fill'),
-    label: Studdy.$('#progress-label'),
-    name: Studdy.$('#name'),
-    levels: Studdy.$('#levels'),
-    step3Question: Studdy.$('#step3-question'),
-    step3Hint: Studdy.$('#step3-hint'),
-    step3Fields: Studdy.$('#step3-fields'),
-    subjectsEmpty: Studdy.$('#subjects-empty'),
-    subjectsList: Studdy.$('#subjects-list'),
-    adder: Studdy.$('#subject-adder'),
-    subjectInput: Studdy.$('#subject-input'),
-    subjectConfirm: Studdy.$('#subject-confirm'),
-    subjectOpen: Studdy.$('#subject-open'),
+    body: Studdy.$('#body'),
+    fill: Studdy.$('#fill'),
     back: Studdy.$('#back'),
     next: Studdy.$('#next'),
-    finish: Studdy.$('#finish'),
+    note: Studdy.$('#note'),
+    error: Studdy.$('#error'),
   };
 
-  // ------------------------------------------------------------------------
-  // Arranque: hace falta sesión. Si el perfil ya existe, este formulario no
-  // pinta nada y se pasa directamente al dashboard.
-  // ------------------------------------------------------------------------
-
-  Studdy.requireSession()
-    .then(function (session) {
-      if (!session) return null;
-      return Studdy.getProfile();
-    })
-    .then(function (perfil) {
-      if (perfil) {
-        window.location.replace('app.html');
-        return;
-      }
-      el.boot.remove();
-      el.name.focus();
-    })
-    .catch(function (err) {
-      el.boot.remove();
-      mostrarError(err.message);
-    });
+  var COLORES = ['t-violet', 't-blue', 't-green', 't-coral', 't-pink', 't-amber', 't-cyan', 't-lime'];
+  function color(i) { return COLORES[i % COLORES.length]; }
 
   // ------------------------------------------------------------------------
-  // Paso 1 — nombre
+  // Las pantallas
   // ------------------------------------------------------------------------
 
-  el.name.addEventListener('input', function () {
-    estado.name = el.name.value.trim();
-    actualizarNavegacion();
-  });
+  var PANTALLAS = {
+    nombre: {
+      pregunta: '¿Cómo te llamas?',
+      hint: 'Para que la app te hable a ti y no a un usuario cualquiera.',
+      nota: 'Solo lo verás tú.',
+      cuerpo: function () {
+        return '<div class="flow__fields"><input class="input" type="text" id="campo" ' +
+          'autocomplete="given-name" spellcheck="false" maxlength="60" value="' +
+          Studdy.escapeHtml(estado.name) + '"></div>';
+      },
+      conectar: function () {
+        var campo = Studdy.$('#campo', el.body);
+        campo.addEventListener('input', function () {
+          estado.name = campo.value.trim();
+          revisar();
+        });
+        campo.addEventListener('keydown', enterAvanza);
+        campo.focus();
+      },
+      valido: function () { return estado.name.length > 0; },
+    },
 
-  // ------------------------------------------------------------------------
-  // Paso 2 — nivel
-  // ------------------------------------------------------------------------
+    nivel: {
+      pregunta: '¿Qué estás estudiando?',
+      hint: 'Es lo que marca la dificultad de todo lo que genere la IA.',
+      cuerpo: function () {
+        return opciones([
+          ['ESO', 'Educación Secundaria Obligatoria', 'apunte'],
+          ['Bachillerato', '1º y 2º, con rama', 'esquema'],
+          ['FP', 'Formación Profesional', 'diana'],
+          ['Universidad', 'Grado o carrera', 'escudo'],
+        ].map(function (o, i) {
+          return { valor: o[0], etiqueta: o[0], sub: o[1], icono: o[2], color: color(i) };
+        }), 'level');
+      },
+      conectar: function () { conectarOpciones('level', function (previo) {
+        if (previo === estado.level) return;
+        estado.course = ''; estado.branch = '';
+        estado.fp_grade = ''; estado.fp_family = ''; estado.fp_cycle = '';
+        estado.university_degree = '';
+      }); },
+      valido: function () { return !!estado.level; },
+    },
 
-  el.levels.addEventListener('change', function (evento) {
-    if (evento.target.name !== 'level') return;
+    eso_curso: {
+      pregunta: '¿En qué curso de la ESO?',
+      cuerpo: function () {
+        return opciones(['1º', '2º', '3º', '4º'].map(function (c, i) {
+          return { valor: c, etiqueta: c + ' de la ESO', icono: 'apunte', color: color(i) };
+        }), 'course');
+      },
+      conectar: function () { conectarOpciones('course'); },
+      valido: function () { return !!estado.course; },
+    },
 
-    // Cambiar de nivel invalida lo contestado en el paso 3.
-    if (estado.level !== evento.target.value) {
-      estado.course = '';
-      estado.branch = '';
-      estado.fp_grade = '';
-      estado.fp_family = '';
-      estado.fp_cycle = '';
-      estado.university_degree = '';
-    }
+    bach_curso: {
+      pregunta: '¿Qué curso de Bachillerato?',
+      cuerpo: function () {
+        return opciones(['1º', '2º'].map(function (c, i) {
+          return { valor: c, etiqueta: c + ' de Bachillerato', icono: 'esquema', color: color(i) };
+        }), 'course');
+      },
+      conectar: function () { conectarOpciones('course'); },
+      valido: function () { return !!estado.course; },
+    },
 
-    estado.level = evento.target.value;
-    construirPaso3();
-    actualizarNavegacion();
-  });
+    bach_rama: {
+      pregunta: '¿Y de qué rama?',
+      cuerpo: function () {
+        return opciones([
+          ['Ciencias', 'diana'],
+          ['Humanidades y CCSS', 'apunte'],
+          ['Artes', 'presentacion'],
+        ].map(function (o, i) {
+          return { valor: o[0], etiqueta: o[0], icono: o[1], color: color(i + 2) };
+        }), 'branch');
+      },
+      conectar: function () { conectarOpciones('branch'); },
+      valido: function () { return !!estado.branch; },
+    },
 
-  // ------------------------------------------------------------------------
-  // Paso 3 — se reconstruye según el nivel elegido
-  // ------------------------------------------------------------------------
+    fp_familia: {
+      pregunta: '¿De qué familia profesional?',
+      hint: 'Las 26 oficiales de España.',
+      cuerpo: function () {
+        return opciones(Studdy.fp.familias.map(function (f, i) {
+          return { valor: f, etiqueta: f, icono: 'carpeta', color: color(i) };
+        }), 'fp_family');
+      },
+      conectar: function () { conectarOpciones('fp_family', function (previo) {
+        if (previo !== estado.fp_family) { estado.fp_grade = ''; estado.fp_cycle = ''; }
+      }); },
+      valido: function () { return !!estado.fp_family; },
+    },
 
-  function construirPaso3() {
-    var html = '';
+    fp_grado: {
+      pregunta: '¿Qué grado?',
+      cuerpo: function () {
+        return opciones(Studdy.fp.grados(estado.fp_family).map(function (g, i) {
+          return { valor: g, etiqueta: 'Grado ' + g, icono: 'escudo', color: color(i) };
+        }), 'fp_grade');
+      },
+      conectar: function () { conectarOpciones('fp_grade', function (previo) {
+        if (previo !== estado.fp_grade) estado.fp_cycle = '';
+      }); },
+      valido: function () { return !!estado.fp_grade; },
+    },
 
-    switch (estado.level) {
-      case 'ESO':
-        el.step3Question.textContent = '¿En qué curso de la ESO estás?';
-        el.step3Hint.textContent = '';
-        html = campoSelect('course', 'Curso', ['1º', '2º', '3º', '4º']);
-        break;
+    fp_ciclo: {
+      pregunta: '¿Cuál es tu ciclo?',
+      cuerpo: function () {
+        var lista = Studdy.fp.ciclos(estado.fp_family, estado.fp_grade);
 
-      case 'Bachillerato':
-        el.step3Question.textContent = 'Cuéntanos más de tu Bachillerato';
-        el.step3Hint.textContent = 'El curso y la rama que estás cursando.';
-        html =
-          campoSelect('course', 'Curso', ['1º', '2º']) +
-          campoSelect('branch', 'Rama', RAMAS_BACHILLERATO);
-        break;
+        if (!lista.length) {
+          return '<div class="flow__fields"><input class="input" type="text" id="campo" ' +
+            'spellcheck="false" maxlength="120" value="' +
+            Studdy.escapeHtml(estado.fp_cycle) + '"></div>';
+        }
 
-      case 'FP':
-        el.step3Question.textContent = 'Cuéntanos más de tu ciclo';
-        el.step3Hint.textContent = 'Elige el grado y la familia, y te salen sus ciclos.';
-        html =
-          campoSelect('fp_family', 'Familia profesional', FAMILIAS_FP) +
-          '<div id="grado-wrap"></div>' +
-          '<div id="ciclo-wrap"></div>';
-        break;
+        var esOtro = !!estado.fp_cycle && lista.indexOf(estado.fp_cycle) === -1;
 
-      case 'Universidad':
-        el.step3Question.textContent = 'Cuéntanos qué carrera estudias';
-        el.step3Hint.textContent = '';
-        html =
-          campoTexto('university_degree', 'Carrera') +
-          campoSelect('course', 'Curso', ['1º', '2º', '3º', '4º', '5º', '6º']);
-        break;
+        return opciones(lista.map(function (c, i) {
+          return { valor: c, etiqueta: c, icono: 'apunte', color: color(i) };
+        }), 'fp_cycle') +
+        '<button class="row-card t-cyan' + (esOtro ? ' is-on' : '') + '" type="button" id="otro" ' +
+          'style="margin-top:12px">' +
+          '<span class="tile">' + Studdy.icons.mas + '</span>' +
+          '<span class="row-card__body"><span class="row-card__label">' +
+            'Mi ciclo no está aquí</span></span>' +
+        '</button>' +
+        '<div id="otro-wrap">' + (esOtro
+          ? '<input class="input" type="text" id="campo" style="margin-top:12px" ' +
+            'spellcheck="false" maxlength="120" value="' + Studdy.escapeHtml(estado.fp_cycle) + '">'
+          : '') + '</div>';
+      },
+      conectar: function () {
+        conectarOpciones('fp_cycle');
+        conectarTexto('fp_cycle');
 
-      default:
-        el.step3Question.textContent = 'Concreta tu curso';
-        el.step3Hint.textContent = '';
-        html = '';
-    }
+        var otro = Studdy.$('#otro', el.body);
+        if (!otro) return;
 
-    el.step3Fields.innerHTML = html;
+        otro.addEventListener('click', function () {
+          estado.fp_cycle = '';
+          Studdy.$$('.row-card', el.body).forEach(function (c) { c.classList.remove('is-on'); });
+          otro.classList.add('is-on');
+          Studdy.$('#otro-wrap', el.body).innerHTML =
+            '<input class="input" type="text" id="campo" style="margin-top:12px" ' +
+            'spellcheck="false" maxlength="120">';
+          conectarTexto('fp_cycle');
+          Studdy.$('#campo', el.body).focus();
+          revisar();
+        });
+      },
+      valido: function () { return !!estado.fp_cycle; },
+    },
 
-    if (estado.level === 'FP') refrescarFp();
-    conectarCampos();
+    uni_carrera: {
+      pregunta: '¿Qué carrera estudias?',
+      cuerpo: function () {
+        return '<div class="flow__fields"><input class="input" type="text" id="campo" ' +
+          'spellcheck="false" maxlength="120" value="' +
+          Studdy.escapeHtml(estado.university_degree) + '"></div>';
+      },
+      conectar: function () {
+        conectarTexto('university_degree');
+        Studdy.$('#campo', el.body).focus();
+      },
+      valido: function () { return !!estado.university_degree; },
+    },
+
+    uni_curso: {
+      pregunta: '¿En qué curso vas?',
+      cuerpo: function () {
+        return opciones(['1º', '2º', '3º', '4º', '5º', '6º'].map(function (c, i) {
+          return { valor: c, etiqueta: c + ' curso', icono: 'escudo', color: color(i) };
+        }), 'course');
+      },
+      conectar: function () { conectarOpciones('course'); },
+      valido: function () { return !!estado.course; },
+    },
+
+    asignaturas: {
+      pregunta: 'Añade tus asignaturas',
+      hint: 'Las que estés dando este curso. Cada apunte irá dentro de una.',
+      nota: 'Podrás cambiarlas cuando quieras.',
+      cuerpo: function () {
+        return '<div class="subject-empty" id="vacio">Todavía no has añadido ninguna.</div>' +
+          '<div class="subject-list" id="lista"></div>' +
+          '<div class="subject-adder" id="adder">' +
+            '<input class="input" type="text" id="campo" spellcheck="false" maxlength="80">' +
+            '<button class="btn btn--accent" type="button" id="add">Añadir</button>' +
+          '</div>' +
+          '<button class="btn btn--soft btn--block" type="button" id="abrir">' +
+            Studdy.icons.mas + 'Añadir asignatura</button>';
+      },
+      conectar: conectarAsignaturas,
+      valido: function () { return estado.subjects.length > 0; },
+      ultima: true,
+    },
+  };
+
+  // Qué pantallas tocan según el nivel elegido.
+  function secuencia() {
+    var s = ['nombre', 'nivel'];
+
+    if (estado.level === 'ESO') s.push('eso_curso');
+    else if (estado.level === 'Bachillerato') s.push('bach_curso', 'bach_rama');
+    else if (estado.level === 'FP') s.push('fp_familia', 'fp_grado', 'fp_ciclo');
+    else if (estado.level === 'Universidad') s.push('uni_carrera', 'uni_curso');
+
+    if (estado.level) s.push('asignaturas');
+    return s;
   }
 
-  // Conecta (o reconecta) todos los campos del paso 3 con el estado.
-  function conectarCampos() {
-    Studdy.$$('[data-campo]', el.step3Fields).forEach(function (campo) {
-      if (campo.dataset.conectado) return;
-      campo.dataset.conectado = '1';
+  // ------------------------------------------------------------------------
+  // Trozos reutilizados
+  // ------------------------------------------------------------------------
 
-      campo.addEventListener(campo.tagName === 'SELECT' ? 'change' : 'input', function () {
-        estado[campo.dataset.campo] = campo.value.trim();
+  function opciones(lista, campo) {
+    return '<div class="flow__fields stagger">' + lista.map(function (o) {
+      var marcada = estado[campo] === o.valor;
+      return '<button class="row-card ' + o.color + (marcada ? ' is-on' : '') + '" ' +
+        'type="button" data-valor="' + Studdy.escapeHtml(o.valor) + '">' +
+        '<span class="tile">' + Studdy.icons[o.icono] + '</span>' +
+        '<span class="row-card__body">' +
+          '<span class="row-card__label">' + Studdy.escapeHtml(o.etiqueta) + '</span>' +
+          (o.sub ? '<span class="row-card__sub">' + Studdy.escapeHtml(o.sub) + '</span>' : '') +
+        '</span>' +
+      '</button>';
+    }).join('') + '</div>';
+  }
 
-        // La familia decide qué grados existen; grado y familia deciden los ciclos.
-        if (campo.dataset.campo === 'fp_family') {
-          estado.fp_grade = '';
-          estado.fp_cycle = '';
-          refrescarFp();
-          conectarCampos();
-        } else if (campo.dataset.campo === 'fp_grade') {
-          estado.fp_cycle = '';
-          refrescarCiclos();
-          conectarCampos();
-        }
+  function conectarOpciones(campo, alCambiar) {
+    Studdy.$$('[data-valor]', el.body).forEach(function (boton) {
+      boton.addEventListener('click', function () {
+        var previo = estado[campo];
+        estado[campo] = boton.dataset.valor;
+        if (alCambiar) alCambiar(previo);
 
-        // "Otro" abre un campo de texto para escribir el ciclo a mano.
-        if (campo.dataset.campo === 'fp_cycle_pick') {
-          estado.fp_cycle = campo.value === '__otro__' ? '' : campo.value;
-          refrescarOtro(campo.value === '__otro__');
-          conectarCampos();
-        }
+        Studdy.$$('.row-card', el.body).forEach(function (c) { c.classList.remove('is-on'); });
+        boton.classList.add('is-on');
 
-        actualizarNavegacion();
+        var otroWrap = Studdy.$('#otro-wrap', el.body);
+        if (otroWrap) otroWrap.innerHTML = '';
+
+        revisar();
       });
     });
   }
 
-  // Solo se ofrecen los grados que esa familia tiene realmente.
-  function refrescarFp() {
-    var wrap = Studdy.$('#grado-wrap', el.step3Fields);
-    if (!wrap) return;
+  function conectarTexto(campo) {
+    var input = Studdy.$('#campo', el.body);
+    if (!input) return;
+    input.addEventListener('input', function () {
+      estado[campo] = input.value.trim();
+      revisar();
+    });
+    input.addEventListener('keydown', enterAvanza);
+  }
 
-    if (!estado.fp_family) {
-      wrap.innerHTML = '';
-      var ciclos = Studdy.$('#ciclo-wrap', el.step3Fields);
-      if (ciclos) ciclos.innerHTML = '';
-      return;
+  function enterAvanza(e) {
+    if (e.key === 'Enter' && !el.next.disabled) {
+      e.preventDefault();
+      el.next.click();
     }
-
-    wrap.innerHTML = '<div style="margin-top:22px">' +
-      campoSelect('fp_grade', 'Grado', Studdy.fp.grados(estado.fp_family)) + '</div>';
-
-    refrescarCiclos();
-  }
-
-  // Pinta el selector de ciclo con los que existen para ese grado y familia.
-  function refrescarCiclos() {
-    var wrap = Studdy.$('#ciclo-wrap', el.step3Fields);
-    if (!wrap) return;
-
-    if (!estado.fp_grade || !estado.fp_family) {
-      wrap.innerHTML = '';
-      return;
-    }
-
-    var lista = Studdy.fp.ciclos(estado.fp_family, estado.fp_grade);
-
-    // Sin ciclos recogidos para esa combinación, se escribe a mano y ya.
-    if (!lista.length) {
-      wrap.innerHTML = '<div style="margin-top:22px">' +
-        campoTexto('fp_cycle', 'Ciclo formativo') + '</div>';
-      return;
-    }
-
-    var opciones = lista.map(function (c) {
-      return '<option value="' + Studdy.escapeHtml(c) + '"' +
-        (estado.fp_cycle === c ? ' selected' : '') + '>' + Studdy.escapeHtml(c) + '</option>';
-    }).join('');
-
-    var esOtro = !!estado.fp_cycle && lista.indexOf(estado.fp_cycle) === -1;
-    var sinElegir = !estado.fp_cycle && !esOtro;
-
-    wrap.innerHTML =
-      '<label class="field" style="margin-top:22px">' +
-        '<span class="field__label">Ciclo formativo</span>' +
-        '<select class="select" data-campo="fp_cycle_pick">' +
-          '<option value="" disabled hidden' + (sinElegir ? ' selected' : '') + '>' +
-            'Selecciona tu ciclo</option>' +
-          opciones +
-          '<option value="__otro__"' + (esOtro ? ' selected' : '') + '>' +
-            'Mi ciclo no está en la lista</option>' +
-        '</select>' +
-      '</label>' +
-      '<div id="otro-wrap"></div>';
-
-    refrescarOtro(esOtro);
-  }
-
-  function refrescarOtro(mostrar) {
-    var wrap = Studdy.$('#otro-wrap', el.step3Fields);
-    if (!wrap) return;
-    wrap.innerHTML = mostrar
-      ? '<div style="margin-top:22px">' + campoTexto('fp_cycle', 'Escribe tu ciclo') + '</div>'
-      : '';
-  }
-
-  // Un <select> siempre arranca en la opción vacía: nada preseleccionado.
-  function campoSelect(campo, etiqueta, opciones) {
-    var options = opciones
-      .map(function (o) {
-        var sel = estado[campo] === o ? ' selected' : '';
-        return '<option value="' + Studdy.escapeHtml(o) + '"' + sel + '>' + Studdy.escapeHtml(o) + '</option>';
-      })
-      .join('');
-
-    var vacioSeleccionado = estado[campo] ? '' : ' selected';
-
-    return (
-      '<label class="field">' +
-      '<span class="field__label">' + Studdy.escapeHtml(etiqueta) + '</span>' +
-      '<select class="select" data-campo="' + campo + '">' +
-      '<option value="" disabled hidden' + vacioSeleccionado + '>Selecciona una opción</option>' +
-      options +
-      '</select>' +
-      '</label>'
-    );
-  }
-
-  function campoTexto(campo, etiqueta) {
-    return (
-      '<label class="field">' +
-      '<span class="field__label">' + Studdy.escapeHtml(etiqueta) + '</span>' +
-      '<input class="input" type="text" data-campo="' + campo + '" spellcheck="false" ' +
-      'maxlength="120" value="' + Studdy.escapeHtml(estado[campo]) + '">' +
-      '</label>'
-    );
   }
 
   // ------------------------------------------------------------------------
-  // Paso 4 — asignaturas
+  // Asignaturas
   // ------------------------------------------------------------------------
 
-  el.subjectOpen.addEventListener('click', function () {
-    el.adder.classList.add('is-open');
-    el.subjectOpen.hidden = true;
-    el.subjectInput.focus();
-  });
+  function conectarAsignaturas() {
+    var abrir = Studdy.$('#abrir', el.body);
+    var adder = Studdy.$('#adder', el.body);
+    var campo = Studdy.$('#campo', el.body);
+    var add = Studdy.$('#add', el.body);
+    var lista = Studdy.$('#lista', el.body);
 
-  el.subjectConfirm.addEventListener('click', anadirAsignatura);
+    pintarAsignaturas();
 
-  el.subjectInput.addEventListener('keydown', function (evento) {
-    if (evento.key === 'Enter') {
-      evento.preventDefault();
-      anadirAsignatura();
-    } else if (evento.key === 'Escape') {
-      cerrarAdder();
-    }
-  });
-
-  function anadirAsignatura() {
-    var nombre = el.subjectInput.value.trim();
-    if (!nombre) {
-      el.subjectInput.focus();
-      return;
-    }
-
-    var repetida = estado.subjects.some(function (s) {
-      return s.toLowerCase() === nombre.toLowerCase();
+    abrir.addEventListener('click', function () {
+      adder.classList.add('is-open');
+      abrir.hidden = true;
+      campo.focus();
     });
 
-    if (!repetida) estado.subjects.push(nombre);
+    add.addEventListener('click', anadir);
 
-    el.subjectInput.value = '';
-    el.subjectInput.focus();
-    pintarAsignaturas();
-    actualizarNavegacion();
-  }
+    campo.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); anadir(); }
+    });
 
-  function cerrarAdder() {
-    el.adder.classList.remove('is-open');
-    el.subjectOpen.hidden = false;
-    el.subjectInput.value = '';
-  }
+    lista.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-quitar]');
+      if (!b) return;
+      estado.subjects.splice(parseInt(b.dataset.quitar, 10), 1);
+      pintarAsignaturas();
+      revisar();
+    });
 
-  function pintarAsignaturas() {
-    el.subjectsEmpty.hidden = estado.subjects.length > 0;
+    function anadir() {
+      var nombre = campo.value.trim();
+      if (!nombre) { campo.focus(); return; }
 
-    el.subjectsList.innerHTML = estado.subjects
-      .map(function (nombre, i) {
-        return (
-          '<span class="chip">' + Studdy.escapeHtml(nombre) +
+      var repetida = estado.subjects.some(function (x) {
+        return x.toLowerCase() === nombre.toLowerCase();
+      });
+      if (!repetida) estado.subjects.push(nombre);
+
+      campo.value = '';
+      campo.focus();
+      pintarAsignaturas();
+      revisar();
+    }
+
+    function pintarAsignaturas() {
+      Studdy.$('#vacio', el.body).hidden = estado.subjects.length > 0;
+      lista.innerHTML = estado.subjects.map(function (n, i) {
+        return '<span class="chip">' + Studdy.escapeHtml(n) +
           '<button class="chip__remove" type="button" data-quitar="' + i + '" ' +
-          'aria-label="Quitar ' + Studdy.escapeHtml(nombre) + '">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" ' +
-          'stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
-          '</button></span>'
-        );
-      })
-      .join('');
-  }
-
-  el.subjectsList.addEventListener('click', function (evento) {
-    var boton = evento.target.closest('[data-quitar]');
-    if (!boton) return;
-    estado.subjects.splice(parseInt(boton.dataset.quitar, 10), 1);
-    pintarAsignaturas();
-    actualizarNavegacion();
-  });
-
-  // ------------------------------------------------------------------------
-  // Navegación
-  // ------------------------------------------------------------------------
-
-  function pasoCompleto(paso) {
-    switch (paso) {
-      case 1:
-        return estado.name.length > 0;
-      case 2:
-        return estado.level.length > 0;
-      case 3:
-        if (estado.level === 'ESO') return !!estado.course;
-        if (estado.level === 'Bachillerato') return !!estado.course && !!estado.branch;
-        if (estado.level === 'FP') return !!estado.fp_grade && !!estado.fp_family && !!estado.fp_cycle;
-        if (estado.level === 'Universidad') return !!estado.university_degree && !!estado.course;
-        return false;
-      case 4:
-        return estado.subjects.length > 0;
-      default:
-        return false;
+          'aria-label="Quitar ' + Studdy.escapeHtml(n) + '">' + Studdy.icons.cerrar + '</button></span>';
+      }).join('');
     }
   }
 
-  function actualizarNavegacion() {
-    var completo = pasoCompleto(pasoActual);
-    el.next.disabled = !completo;
-    el.finish.disabled = !completo;
-  }
+  // ------------------------------------------------------------------------
+  // Motor
+  // ------------------------------------------------------------------------
 
-  function irAPaso(paso) {
-    pasoActual = paso;
+  function pintar() {
+    var lista = secuencia();
+    if (indice >= lista.length) indice = lista.length - 1;
 
-    Studdy.$$('.step-panel').forEach(function (panel) {
-      panel.classList.toggle('is-active', parseInt(panel.dataset.step, 10) === paso);
-    });
+    var p = PANTALLAS[lista[indice]];
 
-    el.fill.style.width = (paso / TOTAL) * 100 + '%';
-    el.label.textContent = 'Paso ' + paso + ' de ' + TOTAL;
+    el.body.innerHTML =
+      '<div class="flow__question">' +
+        '<span class="bubble">' + Studdy.escapeHtml(p.pregunta) + '</span>' +
+        (p.hint ? '<p class="flow__hint">' + Studdy.escapeHtml(p.hint) + '</p>' : '') +
+      '</div>' +
+      p.cuerpo();
 
-    el.back.hidden = paso === 1;
-    el.next.hidden = paso === TOTAL;
-    el.finish.hidden = paso !== TOTAL;
+    el.body.classList.remove('is-entering', 'is-back');
+    void el.body.offsetWidth;
+    el.body.classList.add(yendoAtras ? 'is-back' : 'is-entering');
+    yendoAtras = false;
+
+    p.conectar();
+
+    el.fill.style.width = ((indice + 1) / lista.length) * 100 + '%';
+    el.back.hidden = indice === 0;
+    el.next.textContent = p.ultima ? 'Finalizar' : 'Continuar';
+
+    el.note.hidden = !p.nota;
+    if (p.nota) el.note.innerHTML = Studdy.icons.escudo + Studdy.escapeHtml(p.nota);
 
     el.error.innerHTML = '';
-    actualizarNavegacion();
+    revisar();
+  }
 
-    var primero = Studdy.$('.step-panel.is-active input, .step-panel.is-active select');
-    if (primero && primero.type !== 'radio') primero.focus();
+  function revisar() {
+    var p = PANTALLAS[secuencia()[indice]];
+    el.next.disabled = !p.valido();
   }
 
   el.next.addEventListener('click', function () {
-    if (!pasoCompleto(pasoActual)) return;
-    irAPaso(Math.min(pasoActual + 1, TOTAL));
+    var lista = secuencia();
+    var p = PANTALLAS[lista[indice]];
+    if (!p.valido()) return;
+
+    if (indice < lista.length - 1) {
+      indice++;
+      pintar();
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    finalizar();
   });
 
   el.back.addEventListener('click', function () {
-    irAPaso(Math.max(pasoActual - 1, 1));
+    if (indice === 0) return;
+    indice--;
+    yendoAtras = true;
+    pintar();
+    window.scrollTo(0, 0);
   });
 
   // ------------------------------------------------------------------------
-  // Finalizar: guarda perfil y asignaturas en Supabase
+  // Guardado
   // ------------------------------------------------------------------------
 
-  el.finish.addEventListener('click', function () {
-    if (!pasoCompleto(4)) return;
-
+  function finalizar() {
     el.error.innerHTML = '';
-    el.finish.disabled = true;
+    el.next.disabled = true;
     el.back.disabled = true;
-    el.finish.innerHTML = '<span class="spinner"></span> Guardando…';
+    el.next.innerHTML = '<span class="spinner"></span> Guardando…';
 
     guardar()
-      .then(function () {
-        window.location.href = 'app.html';
-      })
+      .then(function () { window.location.href = 'app.html'; })
       .catch(function (err) {
-        mostrarError(err.message);
-        el.finish.disabled = false;
+        el.error.innerHTML = Studdy.errorHtml(err.message);
+        el.next.disabled = false;
         el.back.disabled = false;
-        el.finish.textContent = 'Finalizar';
+        el.next.textContent = 'Finalizar';
       });
-  });
+  }
 
   function guardar() {
     var client;
 
     return Studdy.getClient()
-      .then(function (c) {
-        client = c;
-        return c.auth.getUser();
-      })
+      .then(function (c) { client = c; return c.auth.getUser(); })
       .then(function (res) {
         var user = res.data ? res.data.user : null;
         if (!user) throw new Error('Tu sesión ha caducado. Vuelve a entrar.');
@@ -473,8 +472,8 @@
         });
       })
       .then(function (profileId) {
-        var filas = estado.subjects.map(function (nombre) {
-          return { profile_id: profileId, name: nombre };
+        var filas = estado.subjects.map(function (n) {
+          return { profile_id: profileId, name: n };
         });
         return client.from('subjects').insert(filas).then(function (out) {
           if (out.error) throw new Error(traducir(out.error));
@@ -483,22 +482,29 @@
   }
 
   function traducir(error) {
-    var mensaje = error.message || 'No se han podido guardar tus datos.';
-    if (/relation .* does not exist/i.test(mensaje)) {
+    var m = error.message || 'No se han podido guardar tus datos.';
+    if (/relation .* does not exist/i.test(m)) {
       return 'Las tablas todavía no existen en Supabase. Ejecuta supabase/schema.sql.';
     }
-    if (/row-level security/i.test(mensaje)) {
+    if (/row-level security/i.test(m)) {
       return 'Supabase ha rechazado la escritura por las políticas RLS. ' +
         'Comprueba que has ejecutado supabase/schema.sql completo.';
     }
-    return mensaje;
+    return m;
   }
 
-  function mostrarError(mensaje) {
-    el.error.innerHTML = Studdy.errorHtml(mensaje);
-  }
+  // ------------------------------------------------------------------------
 
-  // Estado inicial
-  pintarAsignaturas();
-  irAPaso(1);
+  Studdy.requireSession()
+    .then(function (sesion) { return sesion ? Studdy.getProfile() : null; })
+    .then(function (perfil) {
+      if (perfil) { window.location.replace('app.html'); return; }
+      el.boot.remove();
+      pintar();
+    })
+    .catch(function (err) {
+      el.boot.remove();
+      pintar();
+      el.error.innerHTML = Studdy.errorHtml(err.message);
+    });
 })();
