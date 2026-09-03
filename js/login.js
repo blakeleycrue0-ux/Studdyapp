@@ -95,13 +95,16 @@
       return;
     }
 
-    // Si hay un código de OAuth, se canjea antes de decidir nada.
-    var previo = (params.code && !params.access_token)
-      ? Studdy.exchangeCode(params.code).catch(function () { return null; })
-      : Promise.resolve(null);
-
-    previo
-      .then(function () { return Studdy.getSession(); })
+    // Un código de OAuth solo se puede canjear una vez, y supabase-js ya lo
+    // hace solo al arrancar. Por eso aquí se mira primero si hay sesión y el
+    // canje a mano queda como último recurso.
+    Studdy.getSession()
+      .then(function (sesion) {
+        if (sesion || !params.code || params.access_token) return sesion;
+        return Studdy.exchangeCode(params.code)
+          .catch(function () { return null; })
+          .then(function () { return Studdy.getSession(); });
+      })
       .then(function (sesion) {
         return Studdy.currentUser().then(function (usuario) {
           return { sesion: sesion, usuario: usuario };
@@ -169,6 +172,14 @@
       'La vuelta de Google ha caducado o se ha abierto en otra pestaña. Inténtalo otra vez.'],
     [/provider is not enabled/i,
       'El acceso con Google no está activado en Supabase.'],
+    [/unable to exchange external code|invalid_client|unauthorized_client/i,
+      'Google ha rechazado el intercambio del código. Casi siempre es que el ' +
+      'Client Secret de Supabase no coincide con el de Google: vuelve a copiarlo ' +
+      'desde Google Cloud con el botón de copiar y comprueba que no lleva espacios ' +
+      'ni le falta ningún carácter. Revisa también que el Client ID sea el mismo.'],
+    [/invalid_grant|code was already redeemed|expired/i,
+      'El código de Google ya se había usado o ha caducado. Vuelve a intentarlo ' +
+      'desde el principio, sin recargar la página a medias.'],
   ];
 
   function traducirOAuth(codigo, descripcion) {
