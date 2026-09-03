@@ -15,6 +15,10 @@ Studdy.views.chat = (function () {
 
   var historiales = {};
 
+  // Pregunta escrita en el Inicio y todavía sin mandar. El chat la recoge al
+  // montarse y la envía sola, así el salto entre pantallas no se nota.
+  var pendiente = null;
+
   function historial(clave) {
     if (!historiales[clave]) historiales[clave] = [];
     return historiales[clave];
@@ -64,18 +68,10 @@ Studdy.views.chat = (function () {
   // Atajos sobre el campo: escriben la pregunta por ti.
   function atajos(apunte) {
     return apunte
-      ? [
-          ['Explícamelo más fácil', 'chispa', 't-violet'],
-          ['Ponme un ejemplo', 'diana', 't-blue'],
-          ['¿Qué entra en el examen?', 'examen', 't-coral'],
-          ['Hazme un resumen corto', 'esquema', 't-green'],
-        ]
-      : [
-          ['Explícame un concepto', 'chispa', 't-violet'],
-          ['Ayúdame con un ejercicio', 'diana', 't-blue'],
-          ['Cómo estudio para un examen', 'examen', 't-coral'],
-          ['Resúmeme un tema', 'esquema', 't-green'],
-        ];
+      ? ['Explícamelo más fácil', 'Ponme un ejemplo',
+         '¿Qué entra en el examen?', 'Hazme un resumen corto']
+      : ['Explícame un concepto', 'Ayúdame con un ejercicio',
+         'Cómo estudio para un examen', 'Resúmeme un tema'];
   }
 
   function montar(raiz, clave, apunte) {
@@ -85,9 +81,8 @@ Studdy.views.chat = (function () {
     var quick = Studdy.$('#quick', raiz);
 
     quick.innerHTML = atajos(apunte).map(function (a) {
-      return '<button type="button" class="' + a[2] + '" data-texto="' +
-        Studdy.escapeHtml(a[0]) + '">' + Studdy.icons[a[1]] +
-        Studdy.escapeHtml(a[0]) + '</button>';
+      return '<button type="button" data-texto="' + Studdy.escapeHtml(a) + '">' +
+        Studdy.escapeHtml(a) + '</button>';
     }).join('');
 
     quick.addEventListener('click', function (e) {
@@ -118,6 +113,12 @@ Studdy.views.chat = (function () {
       var s = e.target.closest('.chat__suggestion');
       if (s) mandar(s.dataset.texto);
     });
+
+    if (pendiente && clave === 'global') {
+      var traida = pendiente;
+      pendiente = null;
+      mandar(traida);
+    }
 
     function pintar() {
       var mensajes = historial(clave);
@@ -205,5 +206,10 @@ Studdy.views.chat = (function () {
 
   function abajo(log) { log.scrollTop = log.scrollHeight; }
 
-  return { render: render, renderPanel: renderPanel };
+  return {
+    render: render,
+    renderPanel: renderPanel,
+    // La llama el Inicio antes de navegar aquí.
+    preguntar: function (texto) { pendiente = texto; },
+  };
 })();

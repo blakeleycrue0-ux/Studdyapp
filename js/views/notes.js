@@ -44,7 +44,6 @@ Studdy.views.notes = (function () {
 
     if (!apuntes.length) {
       html += '<div class="empty">' +
-        '<div class="empty__icon">' + Studdy.icons.apunte + '</div>' +
         '<p class="empty__title">' +
           (subjectId ? 'Nada en esta asignatura todavía' : 'Aún no tienes apuntes') + '</p>' +
         '<p class="empty__text">Sube un PDF o pega el texto de un tema y la IA te dará ' +
@@ -74,7 +73,6 @@ Studdy.views.notes = (function () {
 
     return (
       '<a class="note-card ' + app.subjectColor(apunte.subject_id) + '" href="#/n/' + apunte.id + '">' +
-        '<span class="tile">' + Studdy.icons.apunte + '</span>' +
         '<span class="note-card__body">' +
           '<span class="note-card__subject">' +
             Studdy.escapeHtml(app.subjectName(apunte.subject_id)) + '</span>' +
@@ -115,7 +113,6 @@ Studdy.views.notes = (function () {
         '</label>' +
 
         '<div class="dropzone" id="dropzone" role="button" tabindex="0">' +
-          '<div class="dropzone__icon">' + Studdy.icons.subir + '</div>' +
           '<p class="dropzone__title">Toca para elegir un PDF</p>' +
           '<p class="dropzone__hint">O arrástralo aquí</p>' +
         '</div>' +

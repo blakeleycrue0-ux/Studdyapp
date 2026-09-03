@@ -11,11 +11,13 @@
 Studdy.views.presentations = (function () {
   'use strict';
 
+  // Los mismos valores están en app.css como variables --sl-*, para que la
+  // vista previa y el .pptx exportado no se separen nunca.
   var TEMAS = [
-    { id: 'th-esmeralda', nombre: 'Esmeralda', bg: '0B3D2C', bg2: '0A5636', ink: 'FFFFFF', soft: 'A9E3C7', acc: '4ADE80' },
-    { id: 'th-papel',     nombre: 'Papel',     bg: 'FAF8F3', bg2: 'F2EDE1', ink: '1D1A14', soft: '6B6355', acc: '0D7A4F' },
-    { id: 'th-noche',     nombre: 'Noche',     bg: '12151C', bg2: '1B202B', ink: 'F2F5F8', soft: '98A4B8', acc: '6BA7FF' },
-    { id: 'th-coral',     nombre: 'Coral',     bg: 'FFF6F3', bg2: 'FFE8E0', ink: '3D1D13', soft: '8A5A4A', acc: 'E0603A' },
+    { id: 'th-marino', nombre: 'Marino', bg: '0B1A3D', bg2: '04091A', ink: 'FFFFFF', soft: 'A8BEEA', acc: '86A6F2' },
+    { id: 'th-noche',  nombre: 'Noche',  bg: '0A0B0E', bg2: '000000', ink: 'FFFFFF', soft: '9EA2AC', acc: '86A6F2' },
+    { id: 'th-papel',  nombre: 'Papel',  bg: 'FFFFFF', bg2: 'EFF1F5', ink: '06070A', soft: '5A5D66', acc: '1B3B86' },
+    { id: 'th-hueso',  nombre: 'Hueso',  bg: 'F5F3EE', bg2: 'E7E4DB', ink: '14150F', soft: '5F6055', acc: '1B3B86' },
   ];
 
   var CLAVE_TEMA = 'studdy:tema-diapos';

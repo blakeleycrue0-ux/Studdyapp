@@ -26,7 +26,6 @@ Studdy.views.agenda = (function () {
 
     if (!eventos.length) {
       html += '<div class="empty">' +
-        '<div class="empty__icon">' + Studdy.icons.reloj + '</div>' +
         '<p class="empty__title">No tienes nada apuntado</p>' +
         '<p class="empty__text">Apunta tus exámenes y entregas y te aviso de lo que ' +
           'tienes cerca, con lo que deberías repasar.</p>' +
@@ -94,8 +93,6 @@ Studdy.views.agenda = (function () {
         '<button class="event__check" data-hecho="' + e.id + '" aria-label="Marcar como hecho">' +
           Studdy.icons.ok +
         '</button>' +
-        '<span class="tile tile--sm">' +
-          Studdy.icons[e.kind === 'entrega' ? 'apunte' : 'examen'] + '</span>' +
         '<div class="event__body">' +
           '<div class="event__kind">' + tipoEtiqueta(e.kind) + '</div>' +
           '<div class="event__title">' + Studdy.escapeHtml(e.title) + cuenta + '</div>' +

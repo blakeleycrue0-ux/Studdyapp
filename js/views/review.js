@@ -25,7 +25,6 @@ Studdy.views.review = (function () {
     if (!datos.total) {
       vista.innerHTML = Studdy.app.cabecera('Repasar') +
         '<div class="empty">' +
-          '<div class="empty__icon">' + Studdy.icons.flashcards + '</div>' +
           '<p class="empty__title">Todavía no tienes tarjetas</p>' +
           '<p class="empty__text">Genera flashcards dentro de un apunte y aparecerán ' +
             'aquí para repasarlas cuando toque.</p>' +
@@ -37,7 +36,6 @@ Studdy.views.review = (function () {
     if (!datos.cola.length) {
       vista.innerHTML = Studdy.app.cabecera('Repasar') +
         '<div class="empty">' +
-          '<div class="empty__icon">' + Studdy.icons.ok + '</div>' +
           '<p class="empty__title">Por hoy has terminado</p>' +
           '<p class="empty__text">No te toca ninguna tarjeta. ' +
             (datos.proxima
@@ -86,7 +84,6 @@ Studdy.views.review = (function () {
       if (indice >= cola.length) {
         zona.innerHTML =
           '<div class="empty">' +
-            '<div class="empty__icon">' + Studdy.icons.ok + '</div>' +
             '<p class="empty__title">Repaso terminado</p>' +
             '<p class="empty__text">' + hechas +
               (hechas === 1 ? ' tarjeta repasada.' : ' tarjetas repasadas.') +

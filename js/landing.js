@@ -83,7 +83,7 @@
     slot.innerHTML =
       '<div class="goal-card">' +
         '<div class="goal-card__head">' +
-          '<span class="pill pill--accent">' + Studdy.icons.diana + 'De 6 a 8</span>' +
+          '<span class="pill pill--accent">De 6 a 8</span>' +
           '<span class="goal-card__fecha">' + Studdy.escapeHtml(fecha) + '</span>' +
         '</div>' +
         Studdy.charts.curva({
@@ -118,7 +118,7 @@
             '<b>6 días activos</b>' +
             '<span>24 cosas hechas esta semana</span>' +
           '</div>' +
-          '<span class="pill pill--accent">' + Studdy.icons.fuego + '6 días</span>' +
+          '<span class="pill pill--accent">6 días seguidos</span>' +
         '</div>' +
         Studdy.charts.barras(dias) +
       '</div>';
@@ -128,14 +128,13 @@
   // Carrusel de reseñas
   // ------------------------------------------------------------------------
 
+  // La puntuación son cinco barras, no cinco estrellas dibujadas.
   function estrellas(n) {
     var html = '';
     for (var i = 1; i <= 5; i++) {
-      html += '<svg class="star' + (i <= n ? ' star--on' : '') + '" viewBox="0 0 24 24" ' +
-        'aria-hidden="true"><path d="m12 2.6 2.9 6 6.6.9-4.8 4.6 1.2 6.5-5.9-3.1-5.9 3.1 1.2-6.5' +
-        'L2.5 9.5l6.6-.9 2.9-6Z"/></svg>';
+      html += '<i class="star' + (i <= n ? ' star--on' : '') + '"></i>';
     }
-    return '<span class="stars" aria-label="' + n + ' de 5 estrellas">' + html + '</span>';
+    return '<span class="stars" aria-label="' + n + ' de 5">' + html + '</span>';
   }
 
   function pintarResenas() {

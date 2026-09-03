@@ -1,16 +1,33 @@
 /* ==========================================================================
    Studdy — landing pública
+
+   Negro puro, un resplandor marino fijo detrás y tipografía grande. Sin
+   iconos, sin ilustraciones: lo que ordena la página es el texto.
    ========================================================================== */
 
-/* Cuadrícula de cuaderno muy tenue en todo el fondo */
-body.landing {
-  background-color: var(--bg);
-  background-image:
-    linear-gradient(var(--surface) 1px, transparent 1px),
-    linear-gradient(90deg, var(--surface) 1px, transparent 1px);
-  background-size: 34px 34px;
-  background-position: -1px -1px;
+body.landing { background: #000; position: relative; }
+
+.landing { --wrap: 1120px; }
+
+/* El fondo. Fijo, sin interacción, y con un velo que lo funde con el negro. */
+.glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(115% 80% at 50% 108%, rgba(46, 91, 201, .34) 0%, rgba(13, 30, 71, .16) 40%, transparent 68%),
+    radial-gradient(66% 52% at 10% 2%, rgba(27, 59, 134, .3) 0%, transparent 58%),
+    radial-gradient(60% 48% at 92% 8%, rgba(46, 91, 201, .18) 0%, transparent 56%);
 }
+.glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .58) 0%, rgba(0, 0, 0, .1) 30%, rgba(0, 0, 0, .4) 100%);
+}
+
+.site-header, main, .site-footer { position: relative; z-index: 1; }
 
 /* --------------------------------------------------------------------------
    Cabecera
@@ -20,8 +37,9 @@ body.landing {
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, .6);
   border-bottom: 1px solid var(--line);
 }
 
@@ -29,565 +47,252 @@ body.landing {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  height: 70px;
+  gap: 24px;
+  height: 68px;
+}
+
+.site-nav { display: flex; align-items: center; gap: 4px; }
+
+/* Píldora de metal líquido: el barrido de luz cruza al pasar por encima. */
+.site-nav a {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 7px;
+  background: linear-gradient(105deg, #050505 0%, #14161C 48%, #232733 100%);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .35s ease, box-shadow .35s ease, color .35s ease;
+}
+.site-nav a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .14) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform .6s ease;
+}
+.site-nav a:hover::before { transform: translateX(120%); }
+.site-nav a:hover {
+  color: var(--ink);
+  background: linear-gradient(105deg, #0A0C12 0%, #1B2030 45%, #2C3550 100%);
+  box-shadow: inset 0 0 0 1px rgba(160, 190, 255, .5), 0 0 18px rgba(46, 91, 201, .24);
 }
 
 /* --------------------------------------------------------------------------
    Hero
    -------------------------------------------------------------------------- */
 
-.hero { padding: 84px 0 96px; }
-
-.hero__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-  gap: 64px;
-  align-items: center;
-}
+.hero { padding: 120px 0 90px; text-align: center; }
 
 .hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 16px 7px 9px;
+  display: inline-block;
+  padding: 7px 15px;
   border-radius: 999px;
-  background: var(--bg);
-  border: 1px solid var(--accent-soft);
-  color: var(--accent);
-  font-size: 13.5px;
-  font-weight: 500;
-  margin-bottom: 26px;
-  box-shadow: 0 1px 3px rgba(16, 34, 26, .05);
-}
-
-.hero__eyebrow b {
-  background: var(--accent);
-  color: #fff;
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
+  background: rgba(27, 59, 134, .3);
+  box-shadow: inset 0 0 0 1px rgba(134, 166, 242, .3);
+  color: var(--navy-lit);
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  margin-bottom: 30px;
 }
 
 .hero__title {
-  font-size: clamp(36px, 4.7vw, 56px);
-  letter-spacing: -0.035em;
-  line-height: 1.03;
-  margin-bottom: 24px;
+  font-size: clamp(38px, 6.4vw, 74px);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 1.07;
+  color: var(--ink);
 }
-
-/* Subrayado verde dibujado a mano bajo la palabra clave */
-.hero__title em {
-  font-style: normal;
-  position: relative;
-  white-space: nowrap;
-}
-
-.hero__title em::after {
-  content: "";
-  position: absolute;
-  left: -2px; right: -2px;
-  bottom: .04em;
-  height: .28em;
-  background: var(--accent);
-  border-radius: 3px;
-  z-index: -1;
-  transform: rotate(-.6deg);
-}
+.hero__title em { font-size: 1.06em; }
 
 .hero__lead {
-  font-size: clamp(17px, 1.6vw, 19.5px);
+  max-width: 600px;
+  margin: 26px auto 0;
   color: var(--ink-2);
-  max-width: 33em;
-  margin-bottom: 34px;
+  font-size: clamp(15.5px, 1.4vw, 18px);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.015em;
 }
 
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
+  justify-content: center;
+  gap: 11px;
+  margin-top: 34px;
 }
 
-.hero__note {
-  font-size: 14px;
-  color: var(--ink-3);
+.hero__note { color: var(--ink-3); font-size: 13px; font-weight: 400; margin-top: 20px; }
+
+.hero__stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px 46px;
+  margin-top: 82px;
+  padding-top: 30px;
+  border-top: 1px solid var(--line);
 }
-
-/* --------------------------------------------------------------------------
-   Objeto 3D: libro que gira 360° de forma continua
-   -------------------------------------------------------------------------- */
-
-.scene {
-  perspective: 1100px;
-  perspective-origin: 50% 42%;
-  display: grid;
-  place-items: center;
-  min-height: 420px;
-  position: relative;
-}
-
-.scene::before {
-  /* halo verde difuso detrás del objeto */
-  content: "";
-  position: absolute;
-  width: 340px; height: 340px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-soft) 0%, rgba(217, 246, 231, 0) 68%);
-  z-index: 0;
-}
-
-.book-tilt {
-  transform: rotateX(-11deg);
-  transform-style: preserve-3d;
-  position: relative;
-  z-index: 1;
-}
-
-.book {
-  --w: 212px;
-  --h: 278px;
-  --d: 52px;
-  position: relative;
-  width: var(--w);
-  height: var(--h);
-  transform-style: preserve-3d;
-  animation: book-spin 15s linear infinite;
-}
-
-@keyframes book-spin {
-  from { transform: rotateY(0deg); }
-  to   { transform: rotateY(360deg); }
-}
-
-.book__face {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  backface-visibility: visible;
-}
-
-/* Tapas: 196 x 256 */
-.book__face--front,
-.book__face--back {
-  width: var(--w);
-  height: var(--h);
-  margin-left: calc(var(--w) / -2);
-  margin-top: calc(var(--h) / -2);
-  border-radius: 4px 10px 10px 4px;
-  background: linear-gradient(145deg, var(--accent) 0%, var(--accent) 62%, var(--accent) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14);
-  display: grid;
-  place-items: center;
-}
-
-.book__face--front { transform: translateZ(calc(var(--d) / 2)); }
-.book__face--back  { transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); border-radius: 10px 4px 4px 10px; }
-
-/* Emblema de la portada */
-.book__emblem {
-  display: grid;
-  place-items: center;
-  gap: 14px;
-  color: #fff;
-  text-align: center;
-}
-
-.book__emblem svg {
-  width: 62px; height: 62px;
-  opacity: .95;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .28));
-}
-
-.book__emblem span {
-  font-family: var(--font);
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  opacity: .82;
-}
-
-.book__face--back .book__emblem svg { width: 40px; opacity: .34; }
-
-/* Lomo (izquierda) */
-.book__face--spine {
-  width: var(--d);
-  height: var(--h);
-  margin-left: calc(var(--d) / -2);
-  margin-top: calc(var(--h) / -2);
-  transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
-  background: linear-gradient(90deg, var(--accent), var(--accent) 45%, var(--accent));
-  border-radius: 4px;
-  box-shadow: inset 2px 0 5px rgba(0, 0, 0, .3), inset -2px 0 5px rgba(0, 0, 0, .3);
-}
-
-/* Cantos de las páginas: derecha, arriba y abajo */
-.book__face--edge,
-.book__face--top,
-.book__face--bottom {
-  background:
-    repeating-linear-gradient(
-      var(--stripe-dir, to bottom),
-      #ffffff 0px, #ffffff 2px,
-      #e8efe9 2px, #e8efe9 3px
-    );
-}
-
-.book__face--edge {
-  width: var(--d);
-  height: calc(var(--h) - 8px);
-  margin-left: calc(var(--d) / -2);
-  margin-top: calc((var(--h) - 8px) / -2);
-  transform: rotateY(90deg) translateZ(calc(var(--w) / 2 - 3px));
-  border-radius: 2px;
-  box-shadow: inset 0 0 12px rgba(16, 34, 26, .16);
-}
-
-.book__face--top,
-.book__face--bottom {
-  --stripe-dir: to right;
-  width: calc(var(--w) - 8px);
-  height: var(--d);
-  margin-left: calc((var(--w) - 8px) / -2);
-  margin-top: calc(var(--d) / -2);
-  box-shadow: inset 0 0 12px rgba(16, 34, 26, .14);
-}
-
-.book__face--top    { transform: rotateX(90deg)  translateZ(calc(var(--h) / 2 - 3px)); }
-.book__face--bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2 - 3px)); }
-
-/* Sombra sutil proyectada en el suelo */
-.book-shadow {
-  position: absolute;
-  bottom: 46px;
-  left: 50%;
-  width: 230px;
-  height: 34px;
-  margin-left: -115px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(16, 34, 26, .26) 0%, rgba(16, 34, 26, 0) 72%);
-  filter: blur(7px);
-  animation: shadow-breathe 15s linear infinite;
-  z-index: 0;
-}
-
-@keyframes shadow-breathe {
-  0%, 100% { transform: scaleX(1);    opacity: .85; }
-  25%      { transform: scaleX(.42);  opacity: .5; }
-  50%      { transform: scaleX(1);    opacity: .85; }
-  75%      { transform: scaleX(.42);  opacity: .5; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .book { animation: none; transform: rotateY(-26deg); }
-  .book-shadow { animation: none; }
+.hero__stat { color: var(--ink-3); font-size: 13.5px; font-weight: 400; letter-spacing: -0.01em; }
+.hero__stat b {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: -0.03em;
+  margin-right: 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --------------------------------------------------------------------------
-   Encabezado de sección
+   Secciones
    -------------------------------------------------------------------------- */
 
-.section { padding: 88px 0; }
-.section--tint {
-  background: var(--surface);
-  border-block: 1px solid var(--line);
-}
+.section { padding: 96px 0; }
+.section--tint { background: rgba(255, 255, 255, .016); border-block: 1px solid var(--line); }
 
-.section__head { max-width: 620px; margin-bottom: 52px; }
+.section__head { max-width: 660px; margin-bottom: 56px; }
 
 .section__kicker {
-  font-family: var(--font);
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: .14em;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 14px;
+  color: var(--navy-lit);
+  margin-bottom: 20px;
 }
 
 .section__title {
-  font-size: clamp(29px, 3.4vw, 42px);
-  margin-bottom: 16px;
+  font-size: clamp(28px, 3.6vw, 46px);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  color: var(--ink);
 }
 
 .section__lead {
-  font-size: 17.5px;
   color: var(--ink-2);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.62;
+  margin-top: 20px;
+  letter-spacing: -0.01em;
 }
 
 /* --------------------------------------------------------------------------
-   Funcionalidades
+   Funcionalidades — lista numerada, sin iconos
    -------------------------------------------------------------------------- */
 
 .features {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.feature {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: 30px 28px 32px;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-}
-
-.feature:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-  box-shadow: var(--shadow-pop);
-}
-
-.feature__icon {
-  width: 50px; height: 50px;
-  border-radius: 15px;
-  display: grid;
-  place-items: center;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-soft);
-  color: var(--accent);
-  margin-bottom: 22px;
-}
-
-.feature__icon svg { width: 24px; height: 24px; }
-
-.feature__title {
-  font-size: 19.5px;
-  margin-bottom: 9px;
-}
-
-.feature__text {
-  color: var(--ink-2);
-  font-size: 15.5px;
-}
-
-/* --------------------------------------------------------------------------
-   Cómo funciona
-   -------------------------------------------------------------------------- */
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  /* La numeración la pinta .step__num, no el marcador del <ol>. */
   list-style: none;
   margin: 0;
   padding: 0;
+  counter-reset: feat;
+  border-top: 1px solid var(--line);
+}
+
+.feature {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 260px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: baseline;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+  counter-increment: feat;
+  transition: background-color .25s ease;
+}
+.feature:hover { background: rgba(255, 255, 255, .02); }
+
+.feature::before {
+  content: counter(feat, decimal-leading-zero);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: var(--navy-lit);
+  font-variant-numeric: tabular-nums;
+}
+
+.feature__icon { display: none; }
+.feature__title { font-size: 22px; font-weight: 500; letter-spacing: -0.04em; color: var(--ink); }
+.feature__text { color: var(--ink-2); font-size: 15.5px; font-weight: 400; line-height: 1.62; }
+
+/* --------------------------------------------------------------------------
+   Pasos
+   -------------------------------------------------------------------------- */
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  counter-reset: step;
 }
 
 .step {
-  position: relative;
-  padding: 30px 24px 28px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  padding: 30px 24px 34px;
+  background: #000;
+  box-shadow: 0 0 0 1px var(--line);
+  counter-increment: step;
+  transition: background-color .25s ease;
 }
+.step:hover { background: rgba(255, 255, 255, .022); }
 
-.step__num {
-  width: 38px; height: 38px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: #fff;
-  font-family: var(--font);
-  font-weight: 700;
-  font-size: 16px;
+.step::before {
+  content: counter(step, decimal-leading-zero);
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: var(--navy-lit);
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px -5px rgba(13, 122, 79, .8);
+  font-variant-numeric: tabular-nums;
 }
+.step__num { display: none; }
 
-.step__title {
-  font-size: 17.5px;
-  margin-bottom: 8px;
-}
-
-.step__text {
-  color: var(--ink-2);
-  font-size: 15px;
-}
-
-/* Línea que conecta los pasos */
-.step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 49px;
-  right: -19px;
-  width: 18px;
-  height: 1.5px;
-  background: var(--line-2);
-}
+.step__title { font-size: 18px; font-weight: 500; letter-spacing: -0.035em; color: var(--ink); }
+.step__text { color: var(--ink-2); font-size: 14.5px; font-weight: 400; line-height: 1.6; margin-top: 12px; }
 
 /* --------------------------------------------------------------------------
-   Cierre y pie
-   -------------------------------------------------------------------------- */
-
-.closer {
-  text-align: center;
-  padding: 96px 0 104px;
-}
-
-.closer__title {
-  font-size: clamp(30px, 3.8vw, 46px);
-  margin-bottom: 18px;
-}
-
-.closer__lead {
-  font-size: 18px;
-  color: var(--ink-2);
-  max-width: 34em;
-  margin: 0 auto 34px;
-}
-
-.site-footer {
-  border-top: 1px solid var(--line);
-  padding: 30px 0;
-}
-
-.site-footer__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  color: var(--ink-3);
-  font-size: 14px;
-}
-
-/* --------------------------------------------------------------------------
-   Adaptación a pantallas pequeñas
-   -------------------------------------------------------------------------- */
-
-@media (max-width: 960px) {
-  .hero { padding: 56px 0 72px; }
-  .hero__grid { grid-template-columns: 1fr; gap: 40px; }
-  .scene { min-height: 360px; order: -1; }
-  .book { --w: 158px; --h: 208px; --d: 40px; }
-  .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .step:not(:last-child)::after { display: none; }
-}
-
-@media (max-width: 620px) {
-  .wrap { padding-inline: 18px; }
-  .section { padding: 64px 0; }
-  .features, .steps { grid-template-columns: 1fr; }
-  .hero__actions .btn { width: 100%; }
-  .hero__note { width: 100%; text-align: center; }
-}
-
-/* ==========================================================================
-   Ajustes del tema oscuro
-   ========================================================================== */
-
-body.landing {
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(1100px 520px at 78% -8%, rgba(34, 224, 126, .12), transparent 62%),
-    radial-gradient(760px 420px at 8% 4%, rgba(142, 124, 247, .10), transparent 60%);
-  background-attachment: fixed;
-}
-
-.site-header {
-  background: rgba(10, 13, 20, .72);
-  border-bottom: 1px solid var(--line);
-}
-
-.hero__eyebrow {
-  background: var(--surface);
-  border-color: var(--line);
-  color: var(--ink-2);
-  font-weight: 600;
-}
-.hero__eyebrow b { background: var(--accent); color: var(--on-accent); }
-
-.hero__title { color: var(--ink); font-weight: 800; letter-spacing: -0.045em; }
-.hero__title em::after { background: var(--accent); opacity: .28; }
-.hero__lead, .section__lead, .closer__lead, .step__text, .feature__text { color: var(--ink-2); }
-.hero__note, .site-footer__inner { color: var(--ink-3); }
-
-.section--tint { background: var(--bg-soft); border-color: var(--line); }
-.section__kicker { color: var(--accent); }
-.section__title, .closer__title, .feature__title, .step__title { color: var(--ink); }
-
-.feature, .step {
-  background: var(--surface);
-  border-color: var(--line);
-}
-.feature:hover {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  box-shadow: var(--shadow-pop);
-}
-
-.feature__icon {
-  background: var(--accent-soft);
-  border-color: transparent;
-  color: var(--accent);
-}
-
-.step__num { background: var(--accent); color: var(--on-accent); box-shadow: none; }
-.step:not(:last-child)::after { background: var(--line-2); }
-
-.site-footer { border-color: var(--line); }
-
-/* El libro del hero, en oscuro */
-.scene::before {
-  background: radial-gradient(circle, rgba(34, 224, 126, .16) 0%, transparent 68%);
-}
-
-.book__face--front, .book__face--back {
-  background: linear-gradient(145deg, var(--accent) 0%, #0E9A57 55%, #076B39 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
-}
-.book__face--front .book__emblem { color: var(--on-accent); }
-.book__face--spine { background: linear-gradient(90deg, #052A18, #0E7A45 45%, #073A22); }
-
-.book__face--edge, .book__face--top, .book__face--bottom {
-  background: repeating-linear-gradient(
-    var(--stripe-dir, to bottom),
-    #E9EEF5 0px, #E9EEF5 2px, #B9C3D2 2px, #B9C3D2 3px);
-}
-
-.book-shadow {
-  background: radial-gradient(ellipse, rgba(0, 0, 0, .6) 0%, transparent 72%);
-}
-
-/* --------------------------------------------------------------------------
-   La landing es ancha: no debe heredar el ancho de columna de la app.
-   -------------------------------------------------------------------------- */
-
-body.landing { --wrap: 1120px; }
-
-/* --------------------------------------------------------------------------
-   Demos: las dos pantallas de progreso, tal cual salen en la app
+   Demos de progreso
    -------------------------------------------------------------------------- */
 
 .demos {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 22px;
 }
 
 .demo {
+  display: flex;
+  flex-direction: column;
   padding: 22px 22px 24px;
   border-radius: var(--r-xl);
-  background: var(--bg-soft);
-  box-shadow: inset 0 0 0 1.5px var(--line);
+  background: rgba(0, 0, 0, .5);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .demo__label {
-  font-size: 12.5px;
-  font-weight: 800;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .16em;
   text-transform: uppercase;
-  letter-spacing: .09em;
   color: var(--ink-3);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .demo .goal-card { margin-bottom: 0; }
@@ -596,7 +301,7 @@ body.landing { --wrap: 1120px; }
   padding: 20px 18px 16px;
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1.5px var(--line);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .demo-card__head {
@@ -606,26 +311,15 @@ body.landing { --wrap: 1120px; }
   gap: 14px;
   margin-bottom: 20px;
 }
-.demo-card__head b {
-  display: block;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-.demo-card__head span {
-  display: block;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink-3);
-  margin-top: 3px;
-}
+.demo-card__head b { display: block; font-size: 19px; font-weight: 500; letter-spacing: -0.04em; }
+.demo-card__head span { display: block; font-size: 13px; font-weight: 400; color: var(--ink-3); margin-top: 4px; }
 
 .demo__aviso {
-  margin-top: 24px;
-  font-size: 14px;
-  font-weight: 500;
+  margin-top: 26px;
+  font-size: 13.5px;
+  font-weight: 400;
   color: var(--ink-3);
-  line-height: 1.55;
+  line-height: 1.6;
   max-width: 620px;
 }
 
@@ -636,13 +330,13 @@ body.landing { --wrap: 1120px; }
 .reviews {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(310px, 1fr);
+  grid-auto-columns: minmax(312px, 1fr);
   gap: 20px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-padding-left: 20px;
-  padding: 4px 20px 8px;
-  margin-inline: -20px;
+  scroll-padding-left: 22px;
+  padding: 4px 22px 8px;
+  margin-inline: -22px;
   scrollbar-width: none;
 }
 .reviews::-webkit-scrollbar { display: none; }
@@ -651,10 +345,10 @@ body.landing { --wrap: 1120px; }
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
-  padding: 24px 22px;
+  padding: 26px 24px;
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1.5px var(--line);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .review__top {
@@ -662,42 +356,43 @@ body.landing { --wrap: 1120px; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
-.stars { display: inline-flex; gap: 3px; }
-.star { width: 17px; height: 17px; fill: var(--surface-3); }
-.star--on { fill: var(--c-amber); }
+/* Las estrellas son barras, no dibujos. */
+.stars { display: inline-flex; gap: 4px; }
+.star { width: 14px; height: 3px; border-radius: 2px; background: var(--surface-3); }
+.star--on { background: var(--navy-lit); }
+.star path { display: none; }
 
-/* Marca que la ficha es un ejemplo, no la opinión de nadie. */
 .review__tag {
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--surface-3);
   color: var(--ink-3);
-  font-size: 11.5px;
-  font-weight: 800;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  letter-spacing: .07em;
 }
 
 .review__text {
   flex: 1;
-  font-size: 16.5px;
-  font-weight: 500;
-  line-height: 1.55;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.015em;
   color: var(--ink-2);
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .review__quien { display: flex; flex-direction: column; gap: 3px; }
-.review__nombre { font-weight: 800; font-size: 15px; letter-spacing: -0.02em; color: var(--ink); }
-.review__nivel { font-weight: 600; font-size: 13.5px; color: var(--ink-3); }
+.review__nombre { font-weight: 500; font-size: 14.5px; letter-spacing: -0.025em; color: var(--ink); }
+.review__nivel { font-weight: 400; font-size: 13px; color: var(--ink-3); }
 
-.dots { display: flex; justify-content: center; gap: 8px; margin-top: 26px; }
-
+.dots { display: flex; justify-content: center; gap: 7px; margin-top: 28px; }
 .dot {
-  width: 8px; height: 8px;
+  width: 6px; height: 6px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -705,15 +400,59 @@ body.landing { --wrap: 1120px; }
   cursor: pointer;
   transition: width .25s ease, background-color .25s ease;
 }
-.dot.is-on { width: 26px; border-radius: 999px; background: var(--accent); }
+.dot.is-on { width: 24px; border-radius: 999px; background: var(--navy-lit); }
 
-@media (max-width: 860px) {
+/* --------------------------------------------------------------------------
+   Cierre y pie
+   -------------------------------------------------------------------------- */
+
+.closer { text-align: center; padding: 30px 0; }
+.closer__title {
+  font-size: clamp(28px, 3.8vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.048em;
+  line-height: 1.1;
+}
+.closer__lead {
+  max-width: 520px;
+  margin: 20px auto 32px;
+  color: var(--ink-2);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.site-footer { border-top: 1px solid var(--line); padding: 34px 0 44px; }
+.site-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  color: var(--ink-3);
+  font-size: 13.5px;
+  font-weight: 400;
+}
+
+/* --------------------------------------------------------------------------
+   Pantallas pequeñas
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 980px) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .demos { grid-template-columns: 1fr; }
+  .feature { grid-template-columns: 46px minmax(0, 200px) minmax(0, 1fr); gap: 20px; }
 }
 
-@media (max-width: 620px) {
-  .reviews { grid-auto-columns: minmax(272px, 84%); }
+@media (max-width: 720px) {
+  .site-nav { display: none; }
+  .hero { padding: 72px 0 62px; }
+  .section { padding: 64px 0; }
+  .section__head { margin-bottom: 38px; }
+  .steps { grid-template-columns: 1fr; }
+  .feature { grid-template-columns: 34px minmax(0, 1fr); row-gap: 10px; }
+  .feature__text { grid-column: 2; }
+  .hero__actions .btn { width: 100%; }
+  .hero__stats { gap: 12px 26px; margin-top: 54px; }
+  .reviews { grid-auto-columns: minmax(268px, 84%); }
 }
-
-/* Las dos demos igualan altura; su contenido se queda arriba. */
-.demo { display: flex; flex-direction: column; }

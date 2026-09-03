@@ -64,8 +64,26 @@ activar **Manual linking** en Authentication → Settings.
 
 ## 2. Estructura
 
+### El lenguaje visual
+
+Negro puro (`#000000`), blanco y **un solo color: un azul marino**, en una
+rampa de cinco pasos (`--navy-deep` → `--navy-lit`). No hay más paleta.
+
+**No hay iconos decorativos.** Lo que ordena cada pantalla es la tipografía, las
+líneas de un píxel y el espacio. `js/icons.js` solo conserva los que son un
+control de verdad —flecha, chevron, aspa, marca, más, info—; los nombres
+antiguos siguen existiendo devolviendo cadena vacía para que ninguna vista se
+rompa al pedir un icono que ya no se dibuja.
+
+Tipografía: **Inter** para todo, e **Instrument Serif** en cursiva únicamente
+para la palabra destacada de un titular (`<em>`). Nada más va en serif.
+
 Móvil primero: barra de navegación abajo con cinco destinos —Inicio, Apuntes,
-Repasar, Chat y Perfil— y contenido en una sola columna.
+Repasar, Chat y Perfil— y contenido en una sola columna. La pestaña activa se
+marca con un punto marino, no con un pictograma.
+
+El **Inicio** abre con una caja para preguntar: escribes ahí y la pregunta se
+manda sola al llegar al chat, sin pasar por ninguna pestaña.
 
 El **onboarding** va de una pregunta por pantalla, con pantallas intercaladas
 que no piden nada: la bienvenida, un resumen de lo que va a poder hacer, la
@@ -88,13 +106,13 @@ app.html              Aplicación (armazón + barra inferior)
 
 css/
   base.css            Tokens de diseño, reset, componentes y gráficas
-  landing.css         Landing, el objeto 3D del hero y las reseñas
+  landing.css         Landing y reseñas
   forms.css           Login y onboarding
   app.css             Aplicación, diapositivas y hoja de impresión
 
 js/
   core.js             Config, sesión, llamadas a la IA y utilidades
-  icons.js            Iconos compartidos
+  icons.js            Los pocos iconos que son un control
   charts.js           Gráficas en SVG: curva, barras y series
   data/fp.js          Las 26 familias de FP y sus ciclos formativos
   landing.js          Demos y carrusel de reseñas de la landing

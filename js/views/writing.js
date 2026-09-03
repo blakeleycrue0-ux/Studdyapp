@@ -46,7 +46,6 @@ Studdy.views.writing = (function () {
 
     if (!docs.length) {
       html += '<div class="empty">' +
-        '<div class="empty__icon">' + Studdy.icons.apunte + '</div>' +
         '<p class="empty__title">No tienes ningún trabajo</p>' +
         '<p class="empty__text">Dime de qué va y qué te piden, y montamos el guion ' +
           'antes de ponerte a escribir.</p>' +
@@ -56,7 +55,6 @@ Studdy.views.writing = (function () {
       html += '<div class="note-list">' + docs.map(function (d) {
         var color = d.subject_id ? Studdy.app.subjectColor(d.subject_id) : 't-violet';
         return '<a class="note-card ' + color + '" href="#/trabajos/' + d.id + '">' +
-          '<span class="tile">' + Studdy.icons.lapiz + '</span>' +
           '<span class="note-card__body">' +
             (d.subject_id
               ? '<span class="note-card__subject">' +

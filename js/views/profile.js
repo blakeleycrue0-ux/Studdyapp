@@ -53,11 +53,11 @@ Studdy.views.profile = (function () {
 
       '<p class="section-title">Atajos</p>' +
       '<div class="menu-list stagger">' +
-        fila('#/apuntes', 'apunte', 't-violet', 'Mis apuntes',
+        fila('#/apuntes', 't-violet', 'Mis apuntes',
           s.notes.length + (s.notes.length === 1 ? ' apunte' : ' apuntes')) +
-        fila('#/agenda', 'reloj', 't-coral', 'Agenda', 'Exámenes y entregas') +
-        fila('#/trabajos', 'lapiz', 't-blue', 'Trabajos', 'Guion, borrador y revisión') +
-        fila('#/tema', 'presentacion', 't-amber', 'Presentación', 'De un tema suelto') +
+        fila('#/agenda', 't-coral', 'Agenda', 'Exámenes y entregas') +
+        fila('#/trabajos', 't-blue', 'Trabajos', 'Guion, borrador y revisión') +
+        fila('#/tema', 't-amber', 'Presentación', 'De un tema suelto') +
       '</div>' +
 
       '<p class="section-title">Tus asignaturas</p>' +
@@ -79,7 +79,7 @@ Studdy.views.profile = (function () {
       '<div class="block">' + filasCuenta(usuario).join('') + '</div>' +
 
       '<button class="btn btn--ghost btn--block" id="logout" style="margin-top:8px">' +
-        Studdy.icons.salir + 'Cerrar sesión</button>';
+        'Cerrar sesión</button>';
 
     var salir = Studdy.$('#logout', vista);
     if (salir) {
@@ -119,9 +119,8 @@ Studdy.views.profile = (function () {
       '<span>' + Studdy.escapeHtml(etiqueta) + '</span></div>';
   }
 
-  function fila(href, icono, color, titulo, sub) {
+  function fila(href, color, titulo, sub) {
     return '<a class="row-card ' + color + '" href="' + href + '">' +
-      '<span class="tile">' + Studdy.icons[icono] + '</span>' +
       '<span class="row-card__body">' +
         '<span class="row-card__label">' + Studdy.escapeHtml(titulo) + '</span>' +
         '<span class="row-card__sub">' + Studdy.escapeHtml(sub) + '</span>' +

@@ -1,96 +1,100 @@
 /* ==========================================================================
    Studdy — base
-   Tema oscuro, tipografía geométrica pesada y una paleta de color por
-   elemento. Todo lo visual cuelga de estas variables.
+
+   Tres colores y nada más: negro, blanco y un azul marino muy oscuro.
+   Sin iconos decorativos: lo que ordena la pantalla es la tipografía, las
+   líneas de un píxel y el espacio. Inter para todo, Instrument Serif en
+   cursiva solo para la palabra que se quiere destacar de un titular.
    ========================================================================== */
 
 :root {
   /* --- Superficies. Del fondo hacia arriba. --- */
-  --bg:        #0A0D14;
-  --bg-soft:   #0F131C;
-  --surface:   #161B27;
-  --surface-2: #1E2431;
-  --surface-3: #262D3C;
+  --bg:        #000000;
+  --surface:   #0A0B0E;
+  --surface-2: #101218;
+  --surface-3: #171A22;
 
-  --line:   #232A38;
-  --line-2: #333B4C;
+  --line:   rgba(255, 255, 255, .09);
+  --line-2: rgba(255, 255, 255, .17);
 
   /* --- Texto --- */
   --ink:   #FFFFFF;
-  --ink-2: #A9B2C4;
-  --ink-3: #6B7588;
+  --ink-2: #9EA2AC;
+  --ink-3: #636672;
 
-  /* --- Acento. Cambiar estas tres cambia toda la app. --- */
-  --accent:      #22E07E;
-  --accent-soft: #1B3A2B;
-  --accent-deep: #0E7A45;
-  --on-accent:   #04160C;
+  /* --- El único color: azul marino, en cinco pasos. --- */
+  --navy-deep: #060C1E;
+  --navy:      #0D1E47;
+  --navy-2:    #1B3B86;
+  --navy-3:    #2E5BC9;
+  --navy-lit:  #86A6F2;
 
-  /* --- Un color por elemento: listas, asignaturas, herramientas. --- */
-  --c-violet: #8E7CF7;
-  --c-blue:   #4D9BFF;
-  --c-green:  #2FDB7F;
-  --c-coral:  #FF7C5C;
-  --c-pink:   #FF6FB3;
-  --c-amber:  #FFB224;
-  --c-cyan:   #25D6EE;
-  --c-lime:   #A9E635;
+  /* Alias para que las vistas no tengan que saber de la rampa. */
+  --accent:      var(--navy-3);
+  --accent-soft: var(--navy);
+  --accent-lit:  var(--navy-lit);
+  --on-accent:   #FFFFFF;
 
-  --danger: #FF5B5B;
-  --warn:   #FFB224;
+  --danger: #FF6B6B;
+  --warn:   #E8C56A;
 
-  --r-sm: 12px;
-  --r:    18px;
-  --r-lg: 24px;
-  --r-xl: 30px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 26px;
 
-  --shadow:     0 2px 8px rgba(0, 0, 0, .4);
-  --shadow-pop: 0 18px 44px -18px rgba(0, 0, 0, .85);
-  --glow:       0 0 0 1px rgba(255, 255, 255, .04) inset;
+  --shadow-pop: 0 24px 60px -26px rgba(0, 0, 0, .95);
+  --glow: inset 0 0 0 1px var(--line);
 
-  --font: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ui:    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --serif: 'Instrument Serif', 'Times New Roman', Times, serif;
 
-  --wrap: 560px;
-  --tabbar: 76px;
+  --wrap: 620px;
+  --tabbar: 74px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
   -webkit-text-size-adjust: 100%;
-  background: var(--bg);
+  background: #000000;
 }
 
 body {
   margin: 0;
-  font-family: var(--font);
+  font-family: var(--ui);
   font-size: 16px;
   line-height: 1.55;
   color: var(--ink);
-  background: var(--bg);
+  background: #000000;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
 }
 
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.1;
 }
 
 p { margin: 0; }
 img, svg { display: block; max-width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
-a { color: var(--accent); }
+/* Ningún enlace de la interfaz se subraya: los que parecen botón, ficha o
+   pestaña ya se explican solos. El subrayado se recupera dentro del texto
+   generado, que es donde de verdad hace falta. */
+a { color: var(--navy-lit); text-decoration: none; }
 
-::selection { background: var(--accent); color: var(--on-accent); }
+::selection { background: var(--navy-2); color: #fff; }
 
 .wrap {
   width: 100%;
   max-width: var(--wrap);
   margin-inline: auto;
-  padding-inline: 20px;
+  padding-inline: 22px;
 }
 
 .visually-hidden {
@@ -103,6 +107,16 @@ a { color: var(--accent); }
   border: 0;
 }
 
+/* La palabra destacada de un titular. Lo único en serif de toda la app. */
+em, .ital {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.07em;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+}
+
 /* --------------------------------------------------------------------------
    Marca
    -------------------------------------------------------------------------- */
@@ -110,202 +124,257 @@ a { color: var(--accent); }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.04em;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.045em;
   color: var(--ink);
   text-decoration: none;
 }
 
+/* La marca es una barra, no un dibujo. */
 .brand__mark {
-  width: 34px; height: 34px;
-  border-radius: 11px;
-  background: var(--accent);
-  color: var(--on-accent);
-  display: grid;
-  place-items: center;
+  width: 4px;
+  height: 21px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #fff 0%, var(--navy-3) 100%);
   flex: none;
 }
-.brand__mark svg { width: 19px; height: 19px; }
+.brand__mark svg { display: none; }
 
 /* --------------------------------------------------------------------------
-   Botones
+   Botones — el lenguaje de cristal líquido
    -------------------------------------------------------------------------- */
 
 .btn[hidden] { display: none; }
 
 .btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 15px 26px;
+  gap: 9px;
+  height: 44px;
+  padding: 0 20px;
   border: 0;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: -0.01em;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
-  transition: transform .12s ease, opacity .15s ease, background-color .15s ease;
-  -webkit-tap-highlight-color: transparent;
+  transition: background .3s ease, border-color .3s ease,
+              box-shadow .3s ease, color .3s ease, opacity .2s ease;
 }
 
-/* Sin esto, un icono dentro de un botón se estira a su tamaño natural */
-.btn svg { width: 19px; height: 19px; flex: none; }
-.btn--lg svg { width: 21px; height: 21px; }
-.btn--sm svg { width: 17px; height: 17px; }
+.btn svg { width: 17px; height: 17px; flex: none; }
 
-.btn:active:not(:disabled) { transform: scale(.97); }
-.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.btn:disabled { opacity: .35; cursor: not-allowed; }
+/* El barrido de luz que cruza el botón al pasar por encima. */
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, .38) 48%, transparent 76%);
+  transform: translateX(-130%);
+  transition: transform .65s ease;
+  pointer-events: none;
+}
+.btn:hover:not(:disabled)::after { transform: translateX(130%); }
 
-/* El principal es blanco, como en las apps que te gustan: destaca más que
-   cualquier color sobre un fondo tan oscuro. */
+.btn:disabled { opacity: .34; cursor: not-allowed; }
+.btn:active:not(:disabled) { transform: scale(.985); }
+
+/* Blanco sólido: la acción principal. */
 .btn--primary {
-  background: #FFFFFF;
-  color: #0A0D14;
-  font-weight: 800;
+  background: linear-gradient(180deg, #ffffff 0%, #e9e9ec 48%, #d2d2d8 100%);
+  color: #06070A;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95);
+}
+.btn--primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffffff 0%, #eff3ff 42%, #cfdcfb 100%);
+  box-shadow: inset 0 1px 0 #fff,
+              0 0 26px rgba(46, 91, 201, .38),
+              0 8px 20px rgba(255, 255, 255, .1);
 }
 
-.btn--accent { background: var(--accent); color: var(--on-accent); font-weight: 800; }
-
-.btn--ghost {
-  background: transparent;
+/* Cristal: la acción secundaria. */
+.btn--ghost, .btn--soft {
+  background: linear-gradient(135deg, rgba(255, 255, 255, .1), rgba(0, 0, 0, .5) 46%, rgba(46, 91, 201, .12));
   color: var(--ink);
-  box-shadow: inset 0 0 0 1.5px var(--line-2);
+  box-shadow: inset 0 0 0 1px var(--line-2), inset 0 1px 0 rgba(255, 255, 255, .1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
-.btn--ghost:hover:not(:disabled) { background: var(--surface); }
+.btn--ghost:hover:not(:disabled), .btn--soft:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(120, 160, 255, .16), rgba(0, 0, 0, .38) 48%, rgba(46, 91, 201, .2));
+  box-shadow: inset 0 0 0 1px rgba(160, 190, 255, .5),
+              inset 0 1px 0 rgba(255, 255, 255, .18),
+              0 0 22px rgba(46, 91, 201, .26);
+}
 
-.btn--soft { background: var(--surface-2); color: var(--ink); }
-.btn--soft:hover:not(:disabled) { background: var(--surface-3); }
+/* Marino sólido: el acento. */
+.btn--accent {
+  background: linear-gradient(180deg, var(--navy-3) 0%, var(--navy-2) 100%);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+.btn--accent:hover:not(:disabled) {
+  background: linear-gradient(180deg, #3D6BDD 0%, #21469C 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 0 24px rgba(46, 91, 201, .42);
+}
 
-.btn--lg { padding: 18px 30px; font-size: 17px; }
-.btn--sm { padding: 10px 18px; font-size: 14.5px; }
-.btn--block { width: 100%; }
+.btn--sm  { height: 36px; padding: 0 15px; font-size: 13.5px; }
+.btn--lg  { height: 52px; padding: 0 26px; font-size: 15.5px; }
+.btn--block { display: flex; width: 100%; }
+
+.btn--danger {
+  background: transparent;
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, .35);
+}
+.btn--danger:hover:not(:disabled) { background: rgba(255, 107, 107, .1); }
+
+/* Botón cuadrado sin etiqueta. */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  flex: none;
+  transition: background .2s ease, color .2s ease;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+.icon-btn svg { width: 19px; height: 19px; }
 
 /* --------------------------------------------------------------------------
    Campos
    -------------------------------------------------------------------------- */
 
-.field { display: block; }
-
-.field__label {
-  display: block;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--ink-2);
-  margin-bottom: 9px;
-}
-
 .input, .textarea, .select {
   width: 100%;
-  padding: 16px 18px;
-  border: 1.5px solid var(--line);
+  padding: 14px 16px;
+  border: 0;
   border-radius: var(--r);
-  background: var(--surface);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--ink);
-  font-size: 16.5px;
-  font-weight: 500;
-  transition: border-color .15s ease, background-color .15s ease;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  outline: 0;
+  transition: box-shadow .2s ease, background-color .2s ease;
+}
+.input::placeholder, .textarea::placeholder { color: var(--ink-3); }
+
+.input:focus, .textarea:focus, .select:focus {
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px rgba(134, 166, 242, .55), 0 0 0 4px rgba(27, 59, 134, .28);
 }
 
-.textarea { min-height: 150px; resize: vertical; line-height: 1.6; }
+.textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
 
 .select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7588' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  padding-right: 42px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-3) 50%),
+    linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 22px, calc(100% - 15px) 22px;
+  background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 19px;
-  padding-right: 46px;
   cursor: pointer;
 }
 
-.input:focus, .textarea:focus, .select:focus {
-  outline: none;
-  border-color: var(--accent);
-  background: var(--surface-2);
+.field { display: grid; gap: 9px; }
+.field__label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
 }
 
-.input::placeholder, .textarea::placeholder { color: var(--ink-3); }
-
 /* --------------------------------------------------------------------------
-   Fila con icono de color: el patrón que se repite en toda la app
+   Filas y tarjetas
+
+   Sin caja de icono: una etiqueta grande, una línea de apoyo y, si acaso,
+   una flecha fina a la derecha.
    -------------------------------------------------------------------------- */
 
 .row-card {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   width: 100%;
-  padding: 16px 18px;
-  border-radius: var(--r-lg);
+  padding: 17px 18px;
+  border: 0;
+  border-radius: var(--r);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1.5px var(--line);
+  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--ink);
+  font: inherit;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  border: 0;
-  transition: transform .12s ease, background-color .15s ease, box-shadow .15s ease;
-  -webkit-tap-highlight-color: transparent;
+  transition: background-color .2s ease, box-shadow .2s ease, transform .12s ease;
 }
+.row-card:hover { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+.row-card:active { transform: scale(.99); }
 
-.row-card:active { transform: scale(.985); }
-
+/* Una barra marino a la izquierda marca la fila elegida. */
 .row-card.is-on {
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 2px var(--accent);
+  background: linear-gradient(90deg, rgba(27, 59, 134, .3), var(--surface-2) 62%);
+  box-shadow: inset 0 0 0 1px rgba(134, 166, 242, .5);
+}
+.row-card.is-on::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--navy-lit);
 }
 
-.row-card__label { font-weight: 700; font-size: 17px; letter-spacing: -0.015em; }
-.row-card__sub { display: block; font-weight: 500; font-size: 14px; color: var(--ink-3); margin-top: 2px; }
-.row-card__body { flex: 1; min-width: 0; }
+.row-card__label { display: block; font-weight: 500; font-size: 16.5px; letter-spacing: -0.025em; }
+.row-card__sub   { display: block; font-weight: 400; font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+.row-card__body  { flex: 1; min-width: 0; }
+.row-card__go    { color: var(--ink-3); flex: none; display: grid; }
+.row-card__go svg { width: 18px; height: 18px; }
 
-/* Un SVG sin ancho declarado se dibuja a 300x150 por defecto: la flecha de
-   la derecha necesita su tamaño explícito. */
-.row-card__go { color: var(--ink-3); flex: none; display: grid; }
-.row-card__go svg { width: 20px; height: 20px; }
+/* Los iconos decorativos se han retirado de toda la app: si queda algún
+   contenedor suelto en una vista, no debe ocupar sitio. */
+.tile, .tile--sm, .tile--lg { display: none !important; }
 
-/* El icono va en una placa del color del elemento */
-.tile {
-  width: 42px; height: 42px;
-  border-radius: 13px;
-  display: grid;
-  place-items: center;
-  flex: none;
-  color: var(--tile, var(--accent));
-  background: color-mix(in srgb, var(--tile, var(--accent)) 16%, transparent);
-}
-.tile svg { width: 21px; height: 21px; stroke-width: 2.1; }
-
-.tile--sm { width: 34px; height: 34px; border-radius: 11px; }
-.tile--sm svg { width: 17px; height: 17px; }
-.tile--lg { width: 54px; height: 54px; border-radius: 17px; }
-.tile--lg svg { width: 26px; height: 26px; }
-
-/* Colores por elemento */
-.t-violet { --tile: var(--c-violet); }
-.t-blue   { --tile: var(--c-blue); }
-.t-green  { --tile: var(--c-green); }
-.t-coral  { --tile: var(--c-coral); }
-.t-pink   { --tile: var(--c-pink); }
-.t-amber  { --tile: var(--c-amber); }
-.t-cyan   { --tile: var(--c-cyan); }
-.t-lime   { --tile: var(--c-lime); }
+/* El color por elemento ya no es un arcoíris: son cinco pasos del mismo
+   marino, para que dos asignaturas se distingan sin salirse de la paleta. */
+.t-violet { --tile: var(--navy-3); }
+.t-blue   { --tile: var(--navy-2); }
+.t-green  { --tile: var(--navy-lit); }
+.t-coral  { --tile: #FFFFFF; }
+.t-pink   { --tile: var(--navy-3); }
+.t-amber  { --tile: var(--navy-lit); }
+.t-cyan   { --tile: var(--navy-2); }
+.t-lime   { --tile: #FFFFFF; }
 
 /* --------------------------------------------------------------------------
-   Barra de progreso del onboarding
+   Progreso
    -------------------------------------------------------------------------- */
 
 .progress {
-  height: 12px;
+  height: 3px;
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--surface-3);
   overflow: hidden;
   flex: 1;
 }
@@ -313,85 +382,78 @@ a { color: var(--accent); }
 .progress__fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--accent);
-  transition: width .45s cubic-bezier(.65, 0, .35, 1);
+  background: linear-gradient(90deg, var(--navy-2), var(--navy-lit));
+  transition: width .5s cubic-bezier(.65, 0, .35, 1);
 }
 
+.progress--lg { height: 6px; }
+
 /* --------------------------------------------------------------------------
-   Bocadillo: la app pregunta, no el formulario
+   Titular de pregunta del onboarding
    -------------------------------------------------------------------------- */
 
 .bubble {
-  position: relative;
-  display: inline-block;
-  padding: 18px 22px;
-  border-radius: 22px;
-  background: var(--surface-2);
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  animation: bubble-in .38s cubic-bezier(.34, 1.4, .64, 1) both;
-}
-
-.bubble::after {
-  content: "";
-  position: absolute;
-  left: 30px;
-  bottom: -11px;
-  width: 22px; height: 12px;
-  background: var(--surface-2);
-  clip-path: polygon(0 0, 100% 0, 28% 100%);
-}
-
-@keyframes bubble-in {
-  from { opacity: 0; transform: translateY(10px) scale(.96); }
-  to   { opacity: 1; transform: none; }
+  display: block;
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  color: var(--ink);
+  animation: rise .5s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 /* --------------------------------------------------------------------------
-   Etiquetas y píldoras
+   Etiquetas
    -------------------------------------------------------------------------- */
 
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  white-space: nowrap;
-  padding: 7px 14px;
+  padding: 6px 13px;
   border-radius: 999px;
   background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--ink-2);
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
-.pill svg { width: 14px; height: 14px; }
-.pill--accent { background: var(--accent-soft); color: var(--accent); }
+.pill svg { width: 13px; height: 13px; }
+.pill--accent {
+  background: rgba(27, 59, 134, .28);
+  box-shadow: inset 0 0 0 1px rgba(134, 166, 242, .34);
+  color: var(--navy-lit);
+}
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 10px 10px 10px 16px;
+  padding: 9px 9px 9px 15px;
   border-radius: 999px;
   background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--ink);
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 400;
+  font-size: 14.5px;
+  letter-spacing: -0.015em;
 }
 
 .chip__remove {
-  width: 24px; height: 24px;
+  width: 22px; height: 22px;
   display: grid;
   place-items: center;
   border: 0;
   border-radius: 50%;
   background: var(--surface-3);
-  color: var(--ink-2);
+  color: var(--ink-3);
   cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
 }
 .chip__remove:hover { background: var(--danger); color: #fff; }
-.chip__remove svg { width: 12px; height: 12px; }
+.chip__remove svg { width: 11px; height: 11px; }
 
 /* --------------------------------------------------------------------------
    Avisos
@@ -402,36 +464,35 @@ a { color: var(--accent); }
   gap: 12px;
   padding: 15px 17px;
   border-radius: var(--r);
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.5;
-  font-weight: 500;
+  font-weight: 400;
 }
-.alert svg { width: 19px; height: 19px; flex: none; margin-top: 2px; }
-.alert--error { background: rgba(255, 91, 91, .12); color: #FF9C9C; }
-.alert--info  { background: var(--accent-soft); color: var(--accent); }
+.alert svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+.alert--error { background: rgba(255, 107, 107, .1); box-shadow: inset 0 0 0 1px rgba(255, 107, 107, .3); color: #FF9C9C; }
+.alert--info  { background: rgba(27, 59, 134, .22); box-shadow: inset 0 0 0 1px rgba(134, 166, 242, .28); color: var(--navy-lit); }
 
 /* --------------------------------------------------------------------------
    Carga
    -------------------------------------------------------------------------- */
 
 .spinner {
-  width: 18px; height: 18px;
-  border: 2.4px solid currentColor;
+  width: 16px; height: 16px;
+  border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   animation: spin .7s linear infinite;
   flex: none;
 }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .loading-row {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
   color: var(--ink-3);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 400;
   padding: 26px 0;
 }
 
@@ -440,39 +501,29 @@ a { color: var(--accent); }
   inset: 0;
   display: grid;
   place-items: center;
-  background: var(--bg);
+  background: #000;
   z-index: 200;
 }
-.boot__inner { display: flex; align-items: center; gap: 13px; color: var(--ink-3); font-weight: 600; }
+.boot__inner { display: flex; align-items: center; gap: 12px; color: var(--ink-3); font-weight: 400; }
 
 /* --------------------------------------------------------------------------
-   Entradas escalonadas: lo que da sensación de "está bien hecho"
+   Entradas escalonadas
    -------------------------------------------------------------------------- */
 
-.stagger > * {
-  animation: rise .42s cubic-bezier(.22, 1, .36, 1) both;
-}
-.stagger > *:nth-child(1) { animation-delay: .03s; }
-.stagger > *:nth-child(2) { animation-delay: .07s; }
-.stagger > *:nth-child(3) { animation-delay: .11s; }
-.stagger > *:nth-child(4) { animation-delay: .15s; }
-.stagger > *:nth-child(5) { animation-delay: .19s; }
-.stagger > *:nth-child(6) { animation-delay: .23s; }
-.stagger > *:nth-child(7) { animation-delay: .27s; }
-.stagger > *:nth-child(8) { animation-delay: .31s; }
-.stagger > *:nth-child(n+9) { animation-delay: .35s; }
+.stagger > * { animation: rise .5s cubic-bezier(.16, 1, .3, 1) both; }
+.stagger > *:nth-child(1) { animation-delay: .02s; }
+.stagger > *:nth-child(2) { animation-delay: .06s; }
+.stagger > *:nth-child(3) { animation-delay: .10s; }
+.stagger > *:nth-child(4) { animation-delay: .14s; }
+.stagger > *:nth-child(5) { animation-delay: .18s; }
+.stagger > *:nth-child(6) { animation-delay: .22s; }
+.stagger > *:nth-child(7) { animation-delay: .26s; }
+.stagger > *:nth-child(8) { animation-delay: .30s; }
+.stagger > *:nth-child(n+9) { animation-delay: .34s; }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: .001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .001ms !important;
-  }
 }
 
 /* --------------------------------------------------------------------------
@@ -480,17 +531,15 @@ a { color: var(--accent); }
    -------------------------------------------------------------------------- */
 
 .chart { position: relative; }
-
 .chart__svg { width: 100%; height: auto; display: block; overflow: visible; }
-
-.chart__base { stroke: var(--line-2); stroke-width: 1.5; }
+.chart__base { stroke: var(--line-2); stroke-width: 1; }
 
 .chart__meta {
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  stroke-dasharray: 3 6;
+  stroke: var(--navy-lit);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
   stroke-linecap: round;
-  opacity: .55;
+  opacity: .5;
 }
 
 .chart__area { animation: chart-area .9s .35s ease both; }
@@ -498,145 +547,142 @@ a { color: var(--accent); }
 
 .chart__linea {
   fill: none;
-  stroke: var(--accent);
-  stroke-width: 3.4;
+  stroke: var(--navy-lit);
+  stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: chart-draw 1.25s cubic-bezier(.5, 0, .2, 1) .1s forwards;
+  animation: chart-draw 1.3s cubic-bezier(.5, 0, .2, 1) .1s forwards;
 }
-.chart__linea--tinte { stroke: var(--tile, var(--accent)); }
-
+.chart__linea--tinte { stroke: var(--tile, var(--navy-lit)); }
 @keyframes chart-draw { to { stroke-dashoffset: 0; } }
 
-.chart__punto {
-  fill: var(--bg);
-  stroke: var(--accent);
-  stroke-width: 3;
-}
+.chart__punto { fill: #000; stroke: var(--navy-lit); stroke-width: 2.4; }
 .chart__punto--ini { stroke: var(--ink-3); }
 .chart__punto--fin {
-  fill: var(--accent);
-  animation: chart-pop .5s cubic-bezier(.34, 1.5, .64, 1) 1.15s both;
+  fill: var(--navy-lit);
+  animation: chart-pop .5s cubic-bezier(.34, 1.5, .64, 1) 1.2s both;
   transform-origin: center;
   transform-box: fill-box;
 }
 @keyframes chart-pop { from { transform: scale(0); } to { transform: scale(1); } }
 
-.chart__nodo {
-  fill: var(--tile, var(--accent));
-  animation: chart-fade .3s ease var(--d, 0ms) both;
-}
+.chart__nodo { fill: var(--tile, var(--navy-lit)); animation: chart-fade .3s ease var(--d, 0ms) both; }
 @keyframes chart-fade { from { opacity: 0; } to { opacity: 1; } }
 
 .chart__globo {
   position: absolute;
   transform: translateY(-50%);
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   white-space: nowrap;
   pointer-events: none;
 }
 .chart__globo--ini {
   left: 0;
   margin-top: -18px;
-  background: var(--surface-2);
+  background: var(--surface-3);
   color: var(--ink-3);
   animation: chart-fade .4s .2s both;
 }
 .chart__globo--fin {
   right: 0;
   margin-top: -26px;
-  background: var(--accent);
-  color: var(--on-accent);
-  animation: chart-pop-in .45s cubic-bezier(.34, 1.5, .64, 1) 1.2s both;
+  background: var(--navy-lit);
+  color: #06070A;
+  animation: chart-pop-in .45s cubic-bezier(.34, 1.5, .64, 1) 1.25s both;
 }
 @keyframes chart-pop-in {
   from { opacity: 0; transform: translateY(-50%) scale(.7); }
   to   { opacity: 1; transform: translateY(-50%) scale(1); }
 }
 
-.chart__eje {
-  position: relative;
-  height: 18px;
-  margin-top: 2px;
-}
+.chart__eje { position: relative; height: 18px; margin-top: 2px; }
 .chart__eje span {
   position: absolute;
   transform: translateX(-50%);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11.5px;
+  font-weight: 400;
   color: var(--ink-3);
   white-space: nowrap;
 }
 .chart__eje span:first-child { transform: none; }
 .chart__eje span:last-child { transform: translateX(-100%); }
 
-/* --- Barras --- */
-
 .chart-barras {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 8px;
+  gap: 7px;
   align-items: end;
-  height: 132px;
+  height: 128px;
 }
 
 .barra { display: flex; flex-direction: column; align-items: center; height: 100%; }
 
 .barra__valor {
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-3);
   height: 16px;
   line-height: 16px;
 }
 
-.barra__caja {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  margin: 4px 0 8px;
-}
+.barra__caja { flex: 1; width: 100%; display: flex; align-items: flex-end; margin: 4px 0 8px; }
 
 .barra__fill {
   width: 100%;
   height: var(--h, 4%);
-  border-radius: 8px;
-  background: var(--surface-3);
+  border-radius: 4px;
+  background: var(--navy);
   transform-origin: bottom;
-  animation: barra-sube .55s cubic-bezier(.22, 1, .36, 1) var(--d, 0ms) both;
+  animation: barra-sube .55s cubic-bezier(.16, 1, .3, 1) var(--d, 0ms) both;
 }
-.barra--hoy .barra__fill { background: var(--accent); }
-.barra--cero .barra__fill { background: var(--surface-2); }
+.barra--hoy  .barra__fill { background: linear-gradient(180deg, var(--navy-lit), var(--navy-2)); }
+.barra--cero .barra__fill { background: var(--surface-3); }
 
 @keyframes barra-sube { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
 .barra__etiqueta {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 400;
   color: var(--ink-3);
   text-transform: uppercase;
-  letter-spacing: .02em;
+  letter-spacing: .06em;
 }
-.barra--hoy .barra__etiqueta { color: var(--accent); }
+.barra--hoy .barra__etiqueta { color: var(--navy-lit); }
+
+.chart-barras--fina { gap: 4px; height: 100px; }
+.chart-barras--fina .barra__valor { display: none; }
+.chart-barras--fina .barra__caja { margin-top: 0; }
+.chart-barras--fina .barra__fill { border-radius: 3px; }
+.chart-barras--fina .barra__etiqueta { font-size: 10px; }
 
 /* --------------------------------------------------------------------------
-   La tarjeta del objetivo. La usan el onboarding y el inicio.
+   Tarjeta de objetivo. La usan el onboarding, el inicio y la landing.
    -------------------------------------------------------------------------- */
 
 .goal-card {
+  position: relative;
   padding: 20px 18px 14px;
   border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: inset 0 0 0 1.5px var(--line);
-  margin-bottom: 24px;
+  box-shadow: inset 0 0 0 1px var(--line);
+  margin-bottom: 22px;
+}
+
+/* Un resplandor marino asomando por el borde inferior. */
+.goal-card::after {
+  content: "";
+  position: absolute;
+  left: 14%; right: 14%;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--navy-3), transparent);
 }
 
 .goal-card__head {
@@ -647,27 +693,24 @@ a { color: var(--accent); }
   margin-bottom: 22px;
 }
 
-.goal-card__fecha {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--ink-3);
-}
+.goal-card__fecha { font-size: 12.5px; font-weight: 400; color: var(--ink-3); }
 
 .goal-card__pie {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  font-size: 12.5px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--ink-3);
   line-height: 1.35;
 }
-.goal-card__pie svg { width: 15px; height: 15px; flex: none; }
+.goal-card__pie svg { width: 14px; height: 14px; flex: none; }
 
-/* Catorce barras no caben con su número encima: se quita y se estrechan. */
-.chart-barras--fina { gap: 5px; height: 104px; }
-.chart-barras--fina .barra__valor { display: none; }
-.chart-barras--fina .barra__caja { margin-top: 0; }
-.chart-barras--fina .barra__fill { border-radius: 5px; }
-.chart-barras--fina .barra__etiqueta { font-size: 10.5px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}

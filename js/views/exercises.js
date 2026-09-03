@@ -39,7 +39,6 @@ Studdy.views.exercises = (function () {
         '</label>' +
 
         '<div class="photo-drop" id="drop" role="button" tabindex="0">' +
-          '<div class="dropzone__icon">' + Studdy.icons.subir + '</div>' +
           '<p class="dropzone__title">Hazle una foto al ejercicio</p>' +
           '<p class="dropzone__hint">O súbela desde la galería</p>' +
         '</div>' +
@@ -234,7 +233,6 @@ Studdy.views.exercises = (function () {
       out.data.map(function (e) {
         var color = e.subject_id ? Studdy.app.subjectColor(e.subject_id) : 't-blue';
         return '<a class="note-card ' + color + '" href="#/ejercicios/' + e.id + '">' +
-          '<span class="tile">' + Studdy.icons.diana + '</span>' +
           '<span class="note-card__body">' +
             (e.subject_id
               ? '<span class="note-card__subject">' +

@@ -207,7 +207,6 @@
         }), 'fp_cycle') +
         '<button class="row-card t-cyan' + (esOtro ? ' is-on' : '') + '" type="button" id="otro" ' +
           'style="margin-top:12px">' +
-          '<span class="tile">' + Studdy.icons.mas + '</span>' +
           '<span class="row-card__body"><span class="row-card__label">' +
             'Mi ciclo no está aquí</span></span>' +
         '</button>' +
@@ -341,7 +340,7 @@
         var p = plan();
         return '<div class="goal-card">' +
           '<div class="goal-card__head">' +
-            '<span class="pill pill--accent">' + Studdy.icons.diana + 'Tu objetivo</span>' +
+            '<span class="pill pill--accent">Tu objetivo</span>' +
             '<span class="goal-card__fecha">' + Studdy.escapeHtml(p.fecha) + '</span>' +
           '</div>' +
           Studdy.charts.curva({
@@ -455,7 +454,6 @@
       var marcada = estado[campo] === o.valor;
       return '<button class="row-card ' + o.color + (marcada ? ' is-on' : '') + '" ' +
         'type="button" data-valor="' + Studdy.escapeHtml(o.valor) + '">' +
-        '<span class="tile">' + Studdy.icons[o.icono] + '</span>' +
         '<span class="row-card__body">' +
           '<span class="row-card__label">' + Studdy.escapeHtml(o.etiqueta) + '</span>' +
           (o.sub ? '<span class="row-card__sub">' + Studdy.escapeHtml(o.sub) + '</span>' : '') +
@@ -486,11 +484,11 @@
     });
   }
 
-  // Filas con icono para las pantallas que no preguntan nada.
+  // Filas numeradas para las pantallas que no preguntan nada. El número lo
+  // pone el CSS con un contador, así el marcado se queda limpio.
   function bullets(lista) {
     return '<ul class="perks stagger">' + lista.map(function (b) {
-      return '<li class="perk ' + b[1] + '">' +
-        '<span class="tile">' + Studdy.icons[b[0]] + '</span>' +
+      return '<li class="perk">' +
         '<span class="perk__body">' +
           '<span class="perk__title">' + Studdy.escapeHtml(b[2]) + '</span>' +
           '<span class="perk__text">' + Studdy.escapeHtml(b[3]) + '</span>' +
@@ -499,12 +497,12 @@
     }).join('') + '</ul>';
   }
 
-  // Tres fichas apiladas que giran: el adorno de la bienvenida.
+  // Tres barras que respiran: el único adorno de la bienvenida.
   function montaje() {
     return '<div class="stack" aria-hidden="true">' +
-      '<span class="stack__card stack__card--3 t-coral">' + Studdy.icons.examen + '</span>' +
-      '<span class="stack__card stack__card--2 t-blue">' + Studdy.icons.flashcards + '</span>' +
-      '<span class="stack__card stack__card--1">' + Studdy.icons.esquema + '</span>' +
+      '<span class="stack__card stack__card--3"></span>' +
+      '<span class="stack__card stack__card--1"></span>' +
+      '<span class="stack__card stack__card--2"></span>' +
     '</div>';
   }
 
@@ -635,7 +633,7 @@
 
     var nota = texto(p.nota);
     el.note.hidden = !nota;
-    if (nota) el.note.innerHTML = Studdy.icons.escudo + Studdy.escapeHtml(nota);
+    if (nota) el.note.textContent = nota;
 
     el.error.innerHTML = '';
     revisar();
