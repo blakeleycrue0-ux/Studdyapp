@@ -173,10 +173,11 @@
     [/provider is not enabled/i,
       'El acceso con Google no está activado en Supabase.'],
     [/unable to exchange external code|invalid_client|unauthorized_client/i,
-      'Google ha rechazado el intercambio del código. Casi siempre es que el ' +
-      'Client Secret de Supabase no coincide con el de Google: vuelve a copiarlo ' +
-      'desde Google Cloud con el botón de copiar y comprueba que no lleva espacios ' +
-      'ni le falta ningún carácter. Revisa también que el Client ID sea el mismo.'],
+      'Google ha rechazado el acceso. Lo más habitual es que el Client Secret ' +
+      'guardado en Supabase esté incompleto o tenga un espacio: bórralo entero y ' +
+      'vuelve a pegarlo desde Google Cloud, comprobando que no le falta ningún ' +
+      'carácter al final. Si el secret es correcto y estabas usando la cuenta del ' +
+      'instituto, entonces es que tu centro no permite aplicaciones externas.'],
     [/invalid_grant|code was already redeemed|expired/i,
       'El código de Google ya se había usado o ha caducado. Vuelve a intentarlo ' +
       'desde el principio, sin recargar la página a medias.'],
@@ -256,6 +257,9 @@
 
       '<button class="btn btn--google btn--lg btn--block" id="google">' +
         ICONO_GOOGLE + 'Continuar con Google</button>' +
+
+      '<p class="auth-note">Si tu instituto tiene bloqueadas las apps externas, ' +
+        'usa una cuenta personal o entra con correo y contraseña.</p>' +
 
       (creando
         ? '<p class="auth-note">Con al menos 8 caracteres. Te enviaremos un correo ' +
