@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maqueta — Studdy</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   MAQUETA. No es la app: es una imagen fija para decidir el diseño.
+
+   Mate de arriba abajo. Ni un resplandor, ni una sombra de color, ni un
+   degradado que brille. Solo rellenos planos, líneas de un píxel y esquinas
+   muy redondeadas.
+   ========================================================================== */
+
+:root {
+  --bg:      #0E1116;   /* oscuro, pero no negro absoluto */
+  --bg-2:    #141821;
+  --card:    #191D27;
+  --card-2:  #212734;
+  --line:    rgba(255, 255, 255, .06);
+  --line-2:  rgba(255, 255, 255, .11);
+
+  --ink:   #FFFFFF;
+  --ink-2: #9BA2B0;
+  --ink-3: #676E7C;
+
+  --navy:     #1D2942;   /* relleno mate */
+  --navy-2:   #27385C;
+  --navy-3:   #365C96;
+  --navy-ink: #8FA4CD;   /* texto azulado, apagado a propósito */
+
+  --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #08090C;
+  font-family: var(--font);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  padding: 44px 32px 56px;
+}
+
+.tira {
+  display: flex;
+  gap: 34px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.col { width: 390px; }
+
+.rotulo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #5A6070;
+  margin-bottom: 14px;
+  padding-left: 4px;
+}
+
+/* --- El marco del móvil --- */
+.tel {
+  width: 390px;
+  height: 844px;
+  border-radius: 42px;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 26px 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.status span:last-child { color: var(--ink-2); font-weight: 600; letter-spacing: .08em; }
+
+/* ==========================================================================
+   HOME
+   ========================================================================== */
+
+.cuerpo { flex: 1; display: flex; flex-direction: column; padding: 0 18px; overflow: hidden; }
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 20px;
+}
+
+.pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.pastilla b { color: var(--ink); font-weight: 800; }
+.pastilla--nav { background: var(--navy); color: var(--navy-ink); }
+.pastilla--nav b { color: #C6D4EE; }
+
+.espacio { flex: 1; }
+
+.yo {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--navy-2);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #C6D4EE;
+}
+
+/* --- Saludo --- */
+.saludo { padding: 4px 4px 22px; }
+.saludo small {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: .02em;
+  margin-bottom: 6px;
+}
+.saludo h1 {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+/* --- La tarjeta grande: lo siguiente que toca --- */
+.foco {
+  border-radius: 26px;
+  background: var(--navy);
+  padding: 22px 22px 20px;
+  margin-bottom: 12px;
+}
+.foco__eti {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--navy-ink);
+  margin-bottom: 12px;
+}
+.foco__tit { font-size: 21px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; }
+.foco__sub { font-size: 13.5px; font-weight: 500; color: #A9B7D4; margin-top: 8px; }
+
+.foco__pie { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.barrita { flex: 1; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.barrita i { display: block; height: 100%; width: 62%; border-radius: 999px; background: #8FA4CD; }
+.foco__pct { font-size: 12.5px; font-weight: 700; color: #A9B7D4; }
+
+/* --- Dos cifras --- */
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.cifra { border-radius: 22px; background: var(--card); padding: 18px 18px 16px; }
+.cifra b { display: block; font-size: 27px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+.cifra span { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-3); margin-top: 8px; }
+
+/* --- Semana, en barras mate --- */
+.semana { border-radius: 22px; background: var(--card); padding: 18px; margin-bottom: 14px; }
+.semana__top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+.semana__tit { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+.semana__meta { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.barras { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 7px; align-items: end; height: 62px; }
+.barras i { display: block; border-radius: 6px; background: var(--card-2); }
+.barras i.on { background: #3C4F78; }
+.barras i.hoy { background: #8FA4CD; }
+.dias { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 7px; margin-top: 9px; }
+.dias span { text-align: center; font-size: 10.5px; font-weight: 700; color: var(--ink-3); }
+
+/* --- Atajos en pastilla, como los de la referencia --- */
+.atajos { display: flex; gap: 8px; overflow: hidden; padding: 2px 0 12px; }
+.atajo {
+  flex: none;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--card);
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.atajo--nav { background: var(--navy); color: #C6D4EE; }
+
+/* --- Compositor --- */
+.comp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+}
+.mas {
+  width: 50px; height: 50px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--card);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--ink-2);
+  line-height: 0;
+  padding-bottom: 3px;
+}
+.campo {
+  flex: 1;
+  height: 50px;
+  border-radius: 999px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.enviar {
+  width: 36px; height: 36px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: #8FA4CD;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.enviar svg { width: 16px; height: 16px; color: #0E1116; }
+
+/* --- Barra inferior --- */
+.tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 10px 12px 26px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: -0.01em;
+}
+.tab i { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+.tab.on { color: var(--ink); }
+.tab.on i { background: #8FA4CD; }
+
+/* ==========================================================================
+   ONBOARDING
+   ========================================================================== */
+
+.ob { flex: 1; display: flex; flex-direction: column; padding: 0 22px 22px; }
+
+.ob__top { display: flex; align-items: center; gap: 14px; padding: 14px 0 34px; }
+.ob__vol { font-size: 20px; color: var(--ink-2); width: 22px; }
+.ob__prog { flex: 1; height: 6px; border-radius: 999px; background: var(--card); overflow: hidden; }
+.ob__prog i { display: block; height: 100%; border-radius: 999px; background: #8FA4CD; }
+.ob__skip { font-size: 14px; font-weight: 700; color: var(--ink-3); }
+
+.ob h2 { font-size: 30px; font-weight: 800; letter-spacing: -0.038em; line-height: 1.16; }
+.ob p.ayuda { font-size: 15px; font-weight: 500; color: var(--ink-3); margin-top: 14px; line-height: 1.5; }
+
+.ob__campo {
+  height: 60px;
+  margin-top: 30px;
+  border-radius: 20px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.ob__campo.lleno { color: var(--ink); box-shadow: inset 0 0 0 1.5px #3C4F78; }
+.cursor { display: inline-block; width: 2px; height: 22px; background: #8FA4CD; margin-left: 2px; }
+
+.op {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 62px;
+  margin-bottom: 10px;
+  padding: 0 20px;
+  border-radius: 20px;
+  background: var(--card);
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.op small { display: block; font-size: 13px; font-weight: 500; color: var(--ink-3); margin-top: 2px; }
+.op.on { background: var(--navy); box-shadow: inset 0 0 0 1.5px #3C4F78; }
+.op__n {
+  width: 26px; height: 26px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--card-2);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-3);
+}
+.op.on .op__n { background: #8FA4CD; color: #0E1116; }
+
+.ob__cta {
+  height: 58px;
+  border-radius: 999px;
+  background: #F2F4F8;
+  color: #0E1116;
+  display: grid;
+  place-items: center;
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: auto;
+}
+.ob__nota { text-align: center; font-size: 12.5px; font-weight: 600; color: var(--ink-3); margin: 0 0 14px; }
+
+/* ==========================================================================
+   CHAT
+   ========================================================================== */
+
+.ch { flex: 1; display: flex; flex-direction: column; padding: 0 18px; }
+.ch__top { display: flex; align-items: center; gap: 10px; padding: 12px 4px 24px; }
+.ch__tit { font-size: 22px; font-weight: 800; letter-spacing: -0.035em; }
+
+.mio {
+  align-self: flex-end;
+  max-width: 84%;
+  padding: 14px 18px;
+  border-radius: 22px 22px 8px 22px;
+  background: var(--navy);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  margin-bottom: 22px;
+}
+.suyo {
+  align-self: flex-start;
+  max-width: 92%;
+  padding: 0 0 0 16px;
+  border-left: 3px solid #3C4F78;
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.62;
+  color: var(--ink-2);
+  margin-bottom: 24px;
+}
+.ch__log { flex: 1; display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+
+<div class="tira">
+
+  <!-- ============ 1. ONBOARDING (lo primero al entrar) ============ -->
+  <div class="col">
+    <p class="rotulo">1 · Entras y ya estás aquí</p>
+    <div class="tel">
+      <div class="status"><span>14:05</span><span>· · ·</span></div>
+
+      <div class="ob">
+        <div class="ob__top">
+          <span class="ob__vol">&larr;</span>
+          <span class="ob__prog"><i style="width:14%"></i></span>
+          <span class="ob__skip">1/7</span>
+        </div>
+
+        <h2>¿Cómo te<br>llamas?</h2>
+        <p class="ayuda">Para que la app te hable a ti. Solo lo verás tú, y la cuenta la creas al final.</p>
+
+        <div class="ob__campo lleno">Lucía<span class="cursor"></span></div>
+
+        <p class="ob__nota" style="margin-top:auto">Sin cuenta todavía. Nada que rellenar.</p>
+        <div class="ob__cta">Continuar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. ONBOARDING: una opción ============ -->
+  <div class="col">
+    <p class="rotulo">2 · Una pregunta por pantalla</p>
+    <div class="tel">
+      <div class="status"><span>14:06</span><span>· · ·</span></div>
+
+      <div class="ob">
+        <div class="ob__top">
+          <span class="ob__vol">&larr;</span>
+          <span class="ob__prog"><i style="width:29%"></i></span>
+          <span class="ob__skip">2/7</span>
+        </div>
+
+        <h2>¿Qué estás<br>estudiando?</h2>
+        <p class="ayuda">Marca la dificultad de todo lo que genere la IA.</p>
+
+        <div style="margin-top:28px">
+          <div class="op"><span class="op__n">1</span><span>ESO<small>Secundaria</small></span></div>
+          <div class="op on"><span class="op__n">2</span><span>Bachillerato<small>1º y 2º, con rama</small></span></div>
+          <div class="op"><span class="op__n">3</span><span>FP<small>Formación Profesional</small></span></div>
+          <div class="op"><span class="op__n">4</span><span>Universidad<small>Grado o carrera</small></span></div>
+        </div>
+
+        <div class="ob__cta">Continuar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. HOME ============ -->
+  <div class="col">
+    <p class="rotulo">3 · El home, ya con cuenta</p>
+    <div class="tel">
+      <div class="status"><span>14:05</span><span>· · ·</span></div>
+
+      <div class="cuerpo">
+
+        <div class="barra">
+          <span class="pastilla pastilla--nav"><b>3</b> días</span>
+          <span class="pastilla"><b>12</b> apuntes</span>
+          <span class="espacio"></span>
+          <span class="yo">L</span>
+        </div>
+
+        <div class="saludo">
+          <small>Buenas tardes</small>
+          <h1>Lucía</h1>
+        </div>
+
+        <div class="foco">
+          <div class="foco__eti">Sigue por aquí</div>
+          <div class="foco__tit">La célula y sus orgánulos</div>
+          <div class="foco__sub">Biología · Esquema hecho · 12 tarjetas</div>
+          <div class="foco__pie">
+            <span class="barrita"><i></i></span>
+            <span class="foco__pct">62%</span>
+          </div>
+        </div>
+
+        <div class="duo">
+          <div class="cifra"><b>9</b><span>tarjetas hoy</span></div>
+          <div class="cifra"><b>78%</b><span>de acierto</span></div>
+        </div>
+
+        <div class="semana">
+          <div class="semana__top">
+            <span class="semana__tit">Tu semana</span>
+            <span class="semana__meta">5 de 7 días</span>
+          </div>
+          <div class="barras">
+            <i class="on" style="height:44%"></i>
+            <i class="on" style="height:72%"></i>
+            <i style="height:12%"></i>
+            <i class="on" style="height:88%"></i>
+            <i class="on" style="height:56%"></i>
+            <i style="height:12%"></i>
+            <i class="hoy" style="height:66%"></i>
+          </div>
+          <div class="dias"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+        </div>
+
+        <div class="espacio"></div>
+
+        <div class="atajos">
+          <span class="atajo atajo--nav">Subir apunte</span>
+          <span class="atajo">Escanear</span>
+          <span class="atajo">Repasar</span>
+        </div>
+
+        <div class="comp">
+          <span class="mas">+</span>
+          <span class="campo">
+            Pregunta a Studdy…
+            <span class="enviar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <span class="tab on">Inicio<i></i></span>
+        <span class="tab">Apuntes<i></i></span>
+        <span class="tab">Repasar<i></i></span>
+        <span class="tab">Chat<i></i></span>
+        <span class="tab">Perfil<i></i></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4. CHAT ============ -->
+  <div class="col">
+    <p class="rotulo">4 · Hablar con la IA</p>
+    <div class="tel">
+      <div class="status"><span>14:08</span><span>· · ·</span></div>
+
+      <div class="ch">
+        <div class="ch__top">
+          <span class="ch__tit">Chat</span>
+          <span class="espacio"></span>
+          <span class="yo">L</span>
+        </div>
+
+        <div class="ch__log">
+          <div class="mio">¿Qué diferencia hay entre mitosis y meiosis?</div>
+          <div class="suyo">
+            La mitosis produce dos células idénticas a la madre y sirve para crecer y
+            reparar tejidos. La meiosis produce cuatro células con la mitad de
+            cromosomas y sirve para formar gametos.<br><br>
+            En 2º de Bachillerato te van a pedir sobre todo las fases y en qué se
+            diferencian los resultados.
+          </div>
+        </div>
+
+        <div class="atajos">
+          <span class="atajo">Ponme un ejemplo</span>
+          <span class="atajo">Más fácil</span>
+        </div>
+
+        <div class="comp">
+          <span class="mas">+</span>
+          <span class="campo">
+            Escribe tu duda…
+            <span class="enviar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <span class="tab">Inicio<i></i></span>
+        <span class="tab">Apuntes<i></i></span>
+        <span class="tab">Repasar<i></i></span>
+        <span class="tab on">Chat<i></i></span>
+        <span class="tab">Perfil<i></i></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
